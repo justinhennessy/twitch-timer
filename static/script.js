@@ -1,5 +1,4 @@
 const counterElement = document.getElementById('counter');
-const increaseCounterButton = document.getElementById('increaseCounter');
 
 function formatTime(seconds) {
   const minutes = Math.floor(seconds / 60);
@@ -29,20 +28,5 @@ async function fetchTimerValue() {
   }
 }
 
-async function increaseTimerValue() {
-  try {
-    const response = await fetch('https://twitch-timer.herokuapp.com/timer/add-time', { method: 'POST' });
-    if (response.ok) {
-      const data = await response.json();
-      updateCounter(data.value);
-    } else {
-      console.error('Error increasing timer value:', response.statusText);
-    }
-  } catch (error) {
-    console.error('Error increasing timer value:', error);
-  }
-}
-
 setInterval(fetchTimerValue, 1000);
-increaseCounterButton.addEventListener('click', increaseTimerValue);
 
