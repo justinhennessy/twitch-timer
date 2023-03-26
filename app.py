@@ -43,6 +43,15 @@ def sub_time():
 
     return jsonify({"value": remaining_seconds})
 
+@app.route('/reset-time', methods=['POST'])
+def reset_time():
+    global remaining_seconds, last_updated
+
+    remaining_seconds = initial_seconds
+    last_updated = time.time()
+
+    return jsonify({"value": remaining_seconds})
+
 if __name__ == '__main__':
     app.run(debug=True)
 

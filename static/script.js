@@ -8,7 +8,11 @@ function formatTime(seconds) {
 }
 
 function updateCounter(value) {
-  counterElement.textContent = formatTime(value);
+  if (value <= 0) {
+    counterElement.textContent = "Next Jam";
+  } else {
+    counterElement.textContent = formatTime(value);
+  }
 }
 
 async function fetchTimerValue() {
