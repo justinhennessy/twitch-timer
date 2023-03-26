@@ -17,7 +17,7 @@ function updateCounter(value) {
 
 async function fetchTimerValue() {
   try {
-    const response = await fetch('http://127.0.0.1:5000/timer');
+    const response = await fetch('https://twitch-timer.herokuapp.com/timer');
     if (response.ok) {
       const data = await response.json();
       updateCounter(data.value);
@@ -31,7 +31,7 @@ async function fetchTimerValue() {
 
 async function increaseTimerValue() {
   try {
-    const response = await fetch('http://127.0.0.1:5000/add-time', { method: 'POST' });
+    const response = await fetch('https://twitch-timer.herokuapp.com/timer/add-time', { method: 'POST' });
     if (response.ok) {
       const data = await response.json();
       updateCounter(data.value);
