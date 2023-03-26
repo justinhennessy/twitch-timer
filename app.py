@@ -19,14 +19,23 @@ def add_time():
         remaining_time = 600
     return render_template('timer.html', remaining_time=remaining_time)
 
-@app.route('/nightbot', methods=['GET'])
+@app.route('/nightbot', methods=['GET', 'POST'])
 def nightbot():
     global remaining_time
-    if request.form.get('command') == '!encore':
+    if request.method == 'GET':
+        command = request.args.get('command')
+    elif request.method == 'POST':
+        command = request.form.get('command')
+    else:
+        return 'Invalid request method'
+
+    if command == '!encore':
         remaining_time += 30  # Add 30 seconds to the remaining time
         if remaining_time > 600:  # Limit the timer to 10 minutes
             remaining_time = 600
-    return 'OK'
+        return 'OK'
+    else:
+        return 'Invalid command'
 
 if __name__ == '__main__':
     app.run(debug=True)
