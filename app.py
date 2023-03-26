@@ -22,7 +22,7 @@ def add_time():
 @app.route('/nightbot', methods=['POST'])
 def nightbot():
     global remaining_time
-    if request.form.get('command') == '!addtime':
+    if request.form.get('command') == '!encore':
         remaining_time += 30  # Add 30 seconds to the remaining time
         if remaining_time > 600:  # Limit the timer to 10 minutes
             remaining_time = 600
