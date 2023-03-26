@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import time
+import math
 
 app = Flask(__name__, static_url_path='/static')
 
@@ -23,6 +24,9 @@ def timer():
 
     if remaining_seconds < 0:
         remaining_seconds = 0
+
+    # Round up remaining time to nearest second
+    remaining_seconds = math.ceil(remaining_seconds)
 
     return jsonify({"value": remaining_seconds})
 
@@ -50,6 +54,9 @@ def reset_time():
 
     remaining_seconds = initial_seconds
     last_updated = time.time()
+
+    # Round up remaining time to nearest second
+    remaining_seconds = math.ceil(remaining_seconds)
 
     return jsonify({"value": remaining_seconds})
 
