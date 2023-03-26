@@ -1,7 +1,8 @@
 from flask import Flask, render_template, jsonify, request
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
+
 initial_seconds = 5 * 60
 max_seconds = 10 * 60
 remaining_seconds = initial_seconds
