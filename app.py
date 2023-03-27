@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from flask_caching import Cache
-import time
+from datetime import datetime, timedelta
 import math
 
 app = Flask(__name__, static_url_path='/static')
@@ -10,7 +10,7 @@ app.config['CACHE_TYPE'] = 'simple'
 initial_seconds = 5 * 60
 max_seconds = 10 * 60
 remaining_seconds = initial_seconds
-last_updated = time.time()
+last_updated = datetime.now()
 
 cache = Cache()
 cache.init_app(app)
@@ -24,9 +24,9 @@ def home():
 def timer():
     global remaining_seconds, last_updated
 
-    current_time = time.time() * 1000  # convert to milliseconds
+    current_time = datetime.now()
     elapsed_time = current_time - last_updated
-    remaining_seconds -= elapsed_time / 1000  # convert to seconds
+    remaining_seconds -= elapsed_time.total_seconds()
     last_updated = current_time
 
     if remaining_seconds < 0:
@@ -42,7 +42,7 @@ def reset_time():
     global remaining_seconds, last_updated
 
     remaining_seconds = initial_seconds
-    last_updated = time.time() * 1000  # convert to milliseconds
+    last_updated = datetime.now()
 
     # Round up remaining time to nearest second
     remaining_seconds = math.ceil(remaining_seconds)
