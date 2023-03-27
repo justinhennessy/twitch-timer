@@ -15,9 +15,8 @@ function updateCounter(value) {
 }
 
 async function fetchTimerValue() {
-  console.log('fetchTimerValue called');
   try {
-    const response = await fetch('https://twitch-timer.herokuapp.com/timer');
+    const response = await fetch(`${config.API_ENDPOINT}/timer`);
     if (response.ok) {
       const data = await response.json();
       updateCounter(data.value);
@@ -30,3 +29,4 @@ async function fetchTimerValue() {
 }
 
 setInterval(fetchTimerValue, 1000);
+

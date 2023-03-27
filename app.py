@@ -3,6 +3,7 @@ import time
 import math
 
 app = Flask(__name__, static_url_path='/static')
+app.config.from_pyfile('config.py')
 
 initial_seconds = 5 * 60
 max_seconds = 10 * 60
@@ -30,30 +31,12 @@ def timer():
 
     return jsonify({"value": remaining_seconds})
 
-@app.route('/add-time', methods=['POST'])
-def add_time():
-    global remaining_seconds, last_updated
-
-    remaining_seconds = min(remaining_seconds + 30, max_seconds)
-    last_updated = time.time()
-
-    return jsonify({"value": remaining_seconds})
-
-@app.route('/sub-time', methods=['POST'])
-def sub_time():
-    global remaining_seconds, last_updated
-
-    remaining_seconds = max(remaining_seconds - 30, 0)
-    last_updated = time.time()
-
-    return jsonify({"value": remaining_seconds})
-
 @app.route('/reset-time', methods=['POST'])
 def reset_time():
     global remaining_seconds, last_updated
 
     remaining_seconds = initial_seconds
-    last_updated = time.time()
+    last_updated = time.time() * 1000  # convert to milliseconds
 
     # Round up remaining time to nearest second
     remaining_seconds = math.ceil(remaining_seconds)
