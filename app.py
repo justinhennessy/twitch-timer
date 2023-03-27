@@ -1,7 +1,9 @@
 from flask import Flask, render_template, jsonify, request
+from flask_caching import Cache
 import time
 import math
 
+cache = Cache()
 app = Flask(__name__, static_url_path='/static')
 app.config.from_pyfile('config.py')
 
@@ -15,6 +17,7 @@ def home():
     return render_template('index.html')
 
 @app.route('/timer', methods=['GET'])
+@cache.cached(timeout=2)
 def timer():
     global remaining_seconds, last_updated
 
