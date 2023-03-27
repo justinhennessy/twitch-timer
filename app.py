@@ -3,7 +3,6 @@ from flask_caching import Cache
 import time
 import math
 
-cache = Cache()
 app = Flask(__name__, static_url_path='/static')
 app.config.from_pyfile('config.py')
 
@@ -12,12 +11,15 @@ max_seconds = 10 * 60
 remaining_seconds = initial_seconds
 last_updated = time.time()
 
+cache = Cache()
+cache.init_app(app)
+
 @app.route('/')
 def home():
     return render_template('index.html')
 
 @app.route('/timer', methods=['GET'])
-@cache.cached(timeout=2)
+@cache.cached(timeout=10)
 def timer():
     global remaining_seconds, last_updated
 
