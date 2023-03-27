@@ -17,9 +17,9 @@ def home():
 def timer():
     global remaining_seconds, last_updated
 
-    current_time = time.time()
+    current_time = time.time() * 1000  # convert to milliseconds
     elapsed_time = current_time - last_updated
-    remaining_seconds -= elapsed_time
+    remaining_seconds -= elapsed_time / 1000  # convert to seconds
     last_updated = current_time
 
     if remaining_seconds < 0:
