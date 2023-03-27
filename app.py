@@ -5,6 +5,7 @@ import math
 
 app = Flask(__name__, static_url_path='/static')
 app.config.from_pyfile('config.py')
+app.config['CACHE_TYPE'] = 'simple'
 
 initial_seconds = 5 * 60
 max_seconds = 10 * 60
