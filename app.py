@@ -1,54 +1,68 @@
-from flask import Flask, render_template, jsonify, request
-from flask_caching import Cache
-from datetime import datetime, timedelta
-import math
+from flask import Flask, request, jsonify
 
-app = Flask(__name__, static_url_path='/static')
-app.config.from_pyfile('config.py')
-app.config['CACHE_TYPE'] = 'simple'
+app = Flask(__name__)
 
-initial_seconds = 5 * 60
-max_seconds = 10 * 60
-remaining_seconds = initial_seconds
-last_updated = datetime.now()
+# Set the default start time to 5 minutes (300 seconds)
+time_remaining = 300
+paused = False
 
-cache = Cache()
-cache.init_app(app)
+# Update the timer
+def update_timer():
+    minutes = time_remaining // 60
+    seconds = time_remaining % 60
+    timer_text = f"{minutes:02d}:{seconds:02d}"
+    return timer_text
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# Countdown function
+def countdown():
+    global time_remaining
+    if not paused and time_remaining > 0:
+        time_remaining -= 1
+        return update_timer()
+    elif time_remaining == 0:
+        return 'Jam Ended!'
 
-@app.route('/timer', methods=['GET'])
-@cache.cached(timeout=10)
-def timer():
-    global remaining_seconds, last_updated
+# Add 30 seconds to the timer
+@app.route('/add-time', methods=['POST'])
+def add_time():
+    global time_remaining
+    data = request.get_json()
+    seconds = data.get('seconds', 0)
+    time_remaining += seconds
+    return jsonify({'timeRemaining': time_remaining})
 
-    current_time = datetime.now()
-    elapsed_time = current_time - last_updated
-    remaining_seconds -= elapsed_time.total_seconds()
-    last_updated = current_time
+# Subtract 30 seconds from the timer, ensuring it does not go below 0
+@app.route('/subtract-time', methods=['POST'])
+def subtract_time():
+    global time_remaining
+    data = request.get_json()
+    seconds = data.get('seconds', 0)
+    time_remaining = max(0, time_remaining - seconds)
+    return jsonify({'timeRemaining': time_remaining})
 
-    if remaining_seconds < 0:
-        remaining_seconds = 0
+# Toggle pause and resume
+@app.route('/toggle-pause', methods=['POST'])
+def toggle_pause():
+    global paused
+    paused = not paused
+    return jsonify({'paused': paused})
 
-    # Round up remaining time to nearest second
-    remaining_seconds = math.ceil(remaining_seconds)
-
-    return jsonify({"value": remaining_seconds})
-
+# Reset the timer to 5 minutes
 @app.route('/reset-time', methods=['POST'])
 def reset_time():
-    global remaining_seconds, last_updated
+    global time_remaining
+    time_remaining = 300
+    return jsonify({'timeRemaining': time_remaining})
 
-    remaining_seconds = initial_seconds
-    last_updated = datetime.now()
+# Get the current timer value
+@app.route('/get-timer', methods=['GET'])
+def get_timer():
+    return jsonify({'timeRemaining': time_remaining})
 
-    # Round up remaining time to nearest second
-    remaining_seconds = math.ceil(remaining_seconds)
-
-    return jsonify({"value": remaining_seconds})
+# Start the countdown timer
+@app.route('/')
+def start_timer():
+    return update_timer()
 
 if __name__ == '__main__':
-    app.run(debug=False)
-
+    app.run()
