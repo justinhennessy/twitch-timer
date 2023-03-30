@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Counter Example</title>
+  <style>
+    body {
+      background-color: {{ config['BACKGROUND_COLOR'] }};
+      font-size: {{ config['FONT_SIZE'] }};
+      color: {{ config['FONT_COLOR'] }};
+    }
+  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div id="counter">05:00</div>
+  <script src="{{ config['API_ENDPOINT'] }}/static/script.js"></script>
+</body>
+</html>
+
