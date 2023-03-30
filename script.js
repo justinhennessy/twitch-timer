@@ -23,11 +23,24 @@ function countdown() {
 // Start the countdown timer
 let interval = setInterval(countdown, 1000);
 
-// Add 30 seconds to the timer
 function addTime() {
-    timeRemaining += 30;
-    updateTimer();
+    fetch('/add-time', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ seconds: 30 })
+    })
+    .then(response => response.json())
+    .then(data => {
+        timeRemaining = data.timeRemaining;
+        updateTimer();
+    })
+    .catch(error => {
+        console.error(error);
+    });
 }
+
 
 // Subtract 30 seconds from the timer, ensuring it does not go below 0
 function subtractTime() {
