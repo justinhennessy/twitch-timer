@@ -11,6 +11,7 @@ CORS(app, origins="*")
 @app.route("/api/timer", methods=['GET'])
 def get_timer():
     remaining_time = timer_manager.get_remaining_time()
+    app.logger.info(f"Remaining time: {remaining_time}")
     response = jsonify({"timer": remaining_time})
     return response
 
