@@ -1,21 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown Timer</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Timer Interface</title>
+    <!-- Including the Orbitron font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Styling the timer with the Orbitron font and increasing its size for a cooler look */
+        #timerDisplay {
+            font-family: 'Outfit', sans-serif;
+            font-size: 4em;
+        }
+    </style>
 </head>
+
 <body>
-    <h1 id="timer">05:00</h1>
-    <div class="btn-container">
-        <button id="addTime" class="timer-btn">Add 30 seconds</button>
-        <button id="subtractTime" class="timer-btn">Subtract 30 seconds</button>
-        <button id="pauseResume" class="timer-btn">Pause</button>
-        <button id="resetTime" class="timer-btn">Reset to 5 minutes</button>
-        <br>
-        <input type="color" id="colorPicker" value="#00008B">
+    <div style="text-align: center; margin-top: 50px;">
+        <h1 id="timerDisplay">5:00</h1>
+        <!-- Checkbox to toggle button visibility -->
+        <div>
+            <input type="checkbox" id="toggleButtons" onchange="toggleButtonVisibility()" checked>
+            <label for="toggleButtons">Show Controls</label>
+        </div>
+        <div id="buttonsDiv">
+            <button id="resetButton">Reset</button>
+            <button id="addButton">Add</button>
+            <button id="reduceButton">Reduce</button>
+        </div>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        function toggleButtonVisibility() {
+            var checkBox = document.getElementById("toggleButtons");
+            var buttonsDiv = document.getElementById("buttonsDiv");
+
+            // If the checkbox is checked, display the buttons, otherwise hide them
+            if (checkBox.checked) {
+                buttonsDiv.style.display = "block";
+            } else {
+                buttonsDiv.style.display = "none";
+            }
+        }
+
+        function updateTimerDisplay() {
+            fetch('http://localhost:5000/api/timer')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('timerDisplay').innerText = data.timer;
+                })
+                .catch(error => {
+                    console.error('Error fetching timer:', error);
+                });
+        }
+
+        function postToAPI(endpoint) {
+            fetch('http://localhost:5000' + endpoint, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('timerDisplay').innerText = data.timer;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        // Attach event listeners to buttons
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("resetButton").addEventListener('click', function() {
+                postToAPI('/api/reset');
+            });
+            document.getElementById("addButton").addEventListener('click', function() {
+                postToAPI('/api/add');
+            });
+            document.getElementById("reduceButton").addEventListener('click', function() {
+                postToAPI('/api/reduce');
+            });
+        });
+
+        // Initial update and setting up interval to update every second
+        updateTimerDisplay();
+        setInterval(updateTimerDisplay, 1000);
+
+    </script>
 </body>
+
 </html>
