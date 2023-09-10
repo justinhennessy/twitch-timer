@@ -1,4 +1,5 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
+import os
 from flask_cors import CORS
 from timer_manager import timer_manager
 import logging
@@ -11,7 +12,7 @@ CORS(app, origins="*")
 @app.route("/api/timer", methods=['GET'])
 def get_timer():
     remaining_time = timer_manager.get_remaining_time()
-    app.logger.info(f"Remaining time: {remaining_time}")
+    app.logger.info(f"Request from IP: {request.remote_addr}, Process: {os.getpid()} - Remaining time: {remaining_time}")
     response = jsonify({"timer": remaining_time})
     return response
 
