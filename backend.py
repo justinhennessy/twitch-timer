@@ -32,5 +32,7 @@ def reset_time():
     return jsonify({"message": "Timer reset to 5 minutes", "timer": timer_manager.get_remaining_time()})
 
 if __name__ == "__main__":
+    timer_manager = TimerManager()
+    timer_manager.reset_time()
     app.run(host='0.0.0.0', debug=True)
 
