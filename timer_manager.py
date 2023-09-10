@@ -37,3 +37,4 @@ class TimerManager:
             self.start_time = datetime.now()
             self.total_set_time = self.default_time
 
+timer_manager = TimerManager()
