@@ -1,32 +1,33 @@
-from datetime import datetime, timedelta
 import threading
-import redis
-import os
+import time
 
 class TimerManager:
-    def __init__(self, redis_url):
-        self.redis = redis.from_url(redis_url)
+    def __init__(self, file_path):
         self.lock = threading.Lock()
+        self.file_path = file_path
+
+    def _read_time(self):
+        with open(self.file_path, 'r') as file:
+            return float(file.read())
+
+    def _write_time(self, time_value):
+        with open(self.file_path, 'w') as file:
+            file.write(str(time_value))
 
     def get_remaining_time(self):
         with self.lock:
-            remaining_time = self.redis.get("timer")
+            return int(self._read_time())
 
-            if remaining_time is None:
-                return "Times up!"
-
-            return remaining_time.decode("utf-8")
-
-    def add_time(self):
+    def add_time(self, seconds=30):
         with self.lock:
-            self.redis.incrby("timer", 30)
+            time_value = self._read_time()
+            self._write_time(min(time_value + seconds, 10 * 60))  # Ensure the timer does not exceed 10 minutes
 
-    def reduce_time(self):
+    def reduce_time(self, seconds=30):
         with self.lock:
-            self.redis.decrby("timer", 30)
+            time_value = self._read_time()
+            self._write_time(max(time_value - seconds, 0))
 
     def reset_time(self):
         with self.lock:
-            self.redis.set("timer", 5 * 60)
-
-timer_manager = TimerManager(os.environ.get("REDIS_URL"))
+            self._write_time(5 * 60)
