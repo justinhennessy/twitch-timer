@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Display</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: white; /* Initial background color */
+        }
+        
+        .pulsing-yellow {
+            animation: backgroundPulseYellow 1s ease-in-out infinite;
+        }
+
+        .pulsing-red {
+            animation: backgroundPulseRed 1s ease-in-out infinite;
+        }
+
+        @keyframes backgroundPulseYellow {
+            0%, 100% {
+                background-color: white; /* Start and end with white background */
+            }
+            50% {
+                background-color: lightyellow; /* Pulse to light yellow at 50% */
+            }
+        }
+
+        @keyframes backgroundPulseRed {
+            0%, 100% {
+                background-color: white; /* Start and end with white background */
+            }
+            50% {
+                background-color: lightcoral; /* Pulse to light red at 50% */
+            }
+        }
+        
+        #timerDisplay {
+            font-family: 'Outfit', sans-serif;
+            font-size: 9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="timerDisplay">Loading...</div>
+
+    <script>
+        function formatTime(seconds) {
+            const min = Math.floor(seconds / 60);
+            const sec = seconds % 60;
+            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
+    
+        function displayTimerValue() {
+            fetch('http://127.0.0.1:5000/api/timer')
+                .then(response => response.json())
+                .then(data => {
+                    const timerDisplay = document.getElementById('timerDisplay');
+                    const body = document.body;
+                    
+                    if (data.timer <= 30 && data.timer > 15) {
+                        const formattedTime = formatTime(data.timer);
+                        timerDisplay.innerText = formattedTime;
+                        
+                        // Add background animation class for light yellow when timer is below 30 but above 15
+                        body.classList.remove('pulsing-red');
+                        body.classList.add('pulsing-yellow');
+                    } else if (data.timer <= 15 && data.timer > 0) {
+                        const formattedTime = formatTime(data.timer);
+                        timerDisplay.innerText = formattedTime;
+                        
+                        // Add background animation class for light red when timer is below 15 but above 0
+                        body.classList.remove('pulsing-yellow');
+                        body.classList.add('pulsing-red');
+                    } else if (data.timer === 0) {
+                        timerDisplay.innerText = 'Times up!';
+                        
+                        // Remove background animation class and return to the initial color when timer is 0
+                        body.classList.remove('pulsing-yellow', 'pulsing-red');
+                        body.style.backgroundColor = 'white';
+                    } else {
+                        const formattedTime = formatTime(data.timer);
+                        timerDisplay.innerText = formattedTime;
+                        
+                        // Remove background animation class when timer is above 30 seconds
+                        body.classList.remove('pulsing-yellow', 'pulsing-red');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error in displayTimerValue:', error);
+                    document.getElementById('timerDisplay').innerText = 'Error!';
+                });
+        }
+    
+        // Initial display and setting up interval to update every second
+        displayTimerValue();
+        setInterval(displayTimerValue, 1000);
+    </script>
+</body>
+</html>
