@@ -34,7 +34,12 @@ def reduce_time():
 @app.route("/api/reset", methods=['GET'])
 def reset_time():
     timer_manager.reset_time()
-    return jsonify({"message": "Timer reset to 5 minutes", "timer": timer_manager.get_remaining_time()})
+    return jsonify({"message": "Timer has been reset", "timer": timer_manager.get_remaining_time()})
+
+@app.route("/api/start", methods=['GET'])
+def start_time():
+    timer_manager.start_time()
+    return jsonify({"message": "Timer started at 5 minutes", "timer": timer_manager.get_remaining_time()})
 
 @app.route('/timer.html')
 def serve_timer_html():

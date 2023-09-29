@@ -30,4 +30,8 @@ class TimerManager:
 
     def reset_time(self):
         with self.lock:
-            self._write_time(5 * 60)
+            self._write_time(-1)  # Setting the counter to -1 as per the new requirement
+
+    def start_time(self):
+        with self.lock:
+            self._write_time(300)  # Setting the counter to 300 seconds (5 minutes)

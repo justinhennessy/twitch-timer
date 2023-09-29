@@ -63,6 +63,15 @@
                 .then(data => {
                     const timerDisplay = document.getElementById('timerDisplay');
                     const body = document.body;
+        
+                    // Check for -1 before any formatting
+                    if (data.timer === -1) {
+                        timerDisplay.innerText = "Let's Go!";
+                        
+                        // Remove background animation class when timer is -1
+                        body.classList.remove('pulsing-yellow', 'pulsing-red');
+                        return;  // Exit the function early
+                    }
                     
                     if (data.timer <= 30 && data.timer > 15) {
                         const formattedTime = formatTime(data.timer);
