@@ -23,8 +23,12 @@ def get_timer():
 
 @app.route("/api/add", methods=['GET'])
 def add_time():
-    timer_manager.add_time()
-    return jsonify({"message": "Added 30 seconds", "timer": timer_manager.get_remaining_time()})
+    # Get the 't' parameter from the URL. If it's not provided, default to 30 seconds.
+    seconds = int(request.args.get('t', 30))
+
+    timer_manager.add_time(seconds)
+
+    return jsonify({"message": f"Added {seconds} seconds", "timer": timer_manager.get_remaining_time()})
 
 @app.route("/api/reduce", methods=['GET'])
 def reduce_time():
