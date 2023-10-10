@@ -21,7 +21,8 @@ class TimerManager:
     def add_time(self, seconds=30):
         with self.lock:
             time_value = self._read_time()
-            self._write_time(min(time_value + seconds, 10 * 60))  # Ensure the timer does not exceed 10 minutes
+            if time_value > 0:
+                self._write_time(min(time_value + seconds, 10 * 60))  # Ensure the timer does not exceed 10 minutes
 
     def reduce_time(self, seconds=30):
         with self.lock:
