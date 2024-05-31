@@ -23,12 +23,14 @@ def get_timer():
 
 @app.route("/api/add", methods=['GET'])
 def add_time():
-    # Get the 't' parameter from the URL. If it's not provided, default to 30 seconds.
-    seconds = int(request.args.get('t', 30))
-
-    timer_manager.add_time(seconds)
-
-    return jsonify({"message": f"Added {seconds} seconds", "timer": timer_manager.get_remaining_time()})
+    t_param = request.args.get('t', '30')
+    if t_param.lower() == 'infinite':
+        timer_manager.set_infinite_time()
+        return jsonify({"message": "Timer set to infinite", "timer": -999})
+    else:
+        seconds = int(t_param)
+        timer_manager.add_time(seconds)
+        return jsonify({"message": f"Added {seconds} seconds", "timer": timer_manager.get_remaining_time()})
 
 @app.route("/api/reduce", methods=['GET'])
 def reduce_time():

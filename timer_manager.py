@@ -36,3 +36,7 @@ class TimerManager:
     def start_time(self):
         with self.lock:
             self._write_time(300)  # Setting the counter to 300 seconds (5 minutes)
+
+    def set_infinite_time(self):
+        with self.lock:
+            self._write_time(-999)
