@@ -8,6 +8,7 @@
     <style>
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
@@ -45,10 +46,34 @@
             font-family: 'Outfit', sans-serif;
             font-size: 9em;
         }
+
+        #infiniteImage {
+            display: none; /* Initially hidden */
+            margin-top: 20px;
+        }
+
+        .image-container {
+            width: 700px;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        #infiniteImage {
+            display: none; /* Initially hidden */
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Fit the image within the container */
+        }
     </style>
 </head>
 <body>
     <div id="timerDisplay">Loading...</div>
+    <div class="image-container">
+        <img id="infiniteImage" src="/static/infinite.webp" alt="Infinite Mode Image">
+    </div>
 
     <script>
         function formatTime(seconds) {
@@ -63,41 +88,42 @@
                 .then(data => {
                     const timerDisplay = document.getElementById('timerDisplay');
                     const body = document.body;
+                    const infiniteImage = document.getElementById('infiniteImage');
 
-                    // Check for -1 before any formatting
-                    if (data.timer === -1) {
-                        timerDisplay.innerText = "Let's Go!";
+                    if (data.timer === -999) {
+                        timerDisplay.innerText = ""; // Clear the text
+                        infiniteImage.style.display = 'block';
 
-                        // Remove background animation class when timer is -1
+                        // Remove background animation class when timer is -999
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
                         return;  // Exit the function early
+                    }
+
+                    infiniteImage.style.display = 'none'; // Hide the image if not in infinite mode
+
+                    if (data.timer === -1) {
+                        timerDisplay.innerText = "Let's Go!";
+                        body.classList.remove('pulsing-yellow', 'pulsing-red');
+                        return;
                     }
 
                     if (data.timer <= 30 && data.timer > 15) {
                         const formattedTime = formatTime(data.timer);
                         timerDisplay.innerText = formattedTime;
-
-                        // Add background animation class for light yellow when timer is below 30 but above 15
                         body.classList.remove('pulsing-red');
                         body.classList.add('pulsing-yellow');
                     } else if (data.timer <= 15 && data.timer > 0) {
                         const formattedTime = formatTime(data.timer);
                         timerDisplay.innerText = formattedTime;
-
-                        // Add background animation class for light red when timer is below 15 but above 0
                         body.classList.remove('pulsing-yellow');
                         body.classList.add('pulsing-red');
                     } else if (data.timer === 0) {
                         timerDisplay.innerText = 'Times up!';
-
-                        // Remove background animation class and return to the initial color when timer is 0
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
                         body.style.backgroundColor = 'white';
                     } else {
                         const formattedTime = formatTime(data.timer);
                         timerDisplay.innerText = formattedTime;
-
-                        // Remove background animation class when timer is above 30 seconds
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
                     }
                 })
@@ -107,7 +133,6 @@
                 });
         }
 
-        // Initial display and setting up interval to update every second
         displayTimerValue();
         setInterval(displayTimerValue, 1000);
     </script>
