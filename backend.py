@@ -1,25 +1,23 @@
 from flask import Flask, jsonify, request, send_from_directory
 import os
 import logging
-import threading
-import time
-from flask_cors import CORS  # Import the CORS library
-from timer_manager import TimerManager  # Ensure timer_manager.py is in the same directory
+from flask_cors import CORS
+from timer_manager import TimerManager
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 CORS(app)
 
-timer_manager = TimerManager('timer.txt')
+bucket_name = 'twitch-timer'
+timer_manager = TimerManager(bucket_name)
 timer_manager.reset_time()
 
 @app.route("/api/timer", methods=['GET'])
 def get_timer():
     remaining_time = timer_manager.get_remaining_time()
     app.logger.info(f"Request from IP: {request.remote_addr}, Process: {os.getpid()} - Remaining time: {remaining_time}")
-    response = jsonify({"timer": remaining_time})
-    return response
+    return jsonify({"timer": remaining_time})
 
 @app.route("/api/add", methods=['GET'])
 def add_time():
