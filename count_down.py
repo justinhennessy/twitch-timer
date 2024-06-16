@@ -1,19 +1,23 @@
 import time
+import requests
 import boto3
 from botocore.exceptions import NoCredentialsError, ClientError
 
 bucket_name = 'twitch-timer'
 aws_profile = 'twitch-timer'
+api_url = 'http://127.0.0.1:5001/api/timers'
 
 session = boto3.Session(profile_name=aws_profile)
 s3_client = session.client('s3')
 
-def get_uuid():
+def list_active_timers():
     try:
-        with open('uuid.txt', 'r') as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        return None
+        response = requests.get(api_url)
+        response.raise_for_status()
+        return response.json().get('active_timers', [])
+    except requests.RequestException as e:
+        print(f"Error fetching active timers: {e}")
+        return []
 
 def read_time(file_key):
     try:
@@ -29,17 +33,15 @@ def write_time(file_key, time_value):
         print(f"Error writing file to S3: {e}")
 
 def countdown_timer():
-    file_key = get_uuid()
-    if not file_key:
-        print("UUID file not found, ensure TimerManager initializes first.")
-        return
-
     while True:
-        time_value = read_time(file_key)
+        active_timers = list_active_timers()
+        for timer_uuid in active_timers:
+            file_key = timer_uuid
+            time_value = read_time(file_key)
 
-        if time_value not in [-1, -999]:
-            time_value = max(time_value - 1, 0)
-            write_time(file_key, time_value)
+            if time_value not in [-1, -999]:
+                time_value = max(time_value - 1, 0)
+                write_time(file_key, time_value)
 
         time.sleep(1)
 

@@ -4,23 +4,13 @@ import uuid
 from botocore.exceptions import NoCredentialsError, ClientError
 
 class TimerManager:
-    def __init__(self, bucket_name, aws_profile='twitch-timer'):
+    def __init__(self, bucket_name, uuid=None, aws_profile='twitch-timer'):
         self.lock = threading.Lock()
         self.bucket_name = bucket_name
         self.session = boto3.Session(profile_name=aws_profile)
         self.s3_client = self.session.client('s3')
-        self.file_key = self._get_or_create_uuid()
+        self.file_key = uuid if uuid else str(uuid.uuid4())
         self._ensure_file_exists()
-
-    def _get_or_create_uuid(self):
-        try:
-            with open('uuid.txt', 'r') as f:
-                return f.read().strip()
-        except FileNotFoundError:
-            new_uuid = str(uuid.uuid4())
-            with open('uuid.txt', 'w') as f:
-                f.write(new_uuid)
-            return new_uuid
 
     def _ensure_file_exists(self):
         try:

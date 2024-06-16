@@ -13,7 +13,7 @@
             justify-content: center;
             min-height: 100vh;
             margin: 0;
-            background-color: white; /* Initial background color */
+            background-color: white;
         }
 
         .pulsing-yellow {
@@ -26,19 +26,19 @@
 
         @keyframes backgroundPulseYellow {
             0%, 100% {
-                background-color: white; /* Start and end with white background */
+                background-color: white;
             }
             50% {
-                background-color: lightyellow; /* Pulse to light yellow at 50% */
+                background-color: lightyellow;
             }
         }
 
         @keyframes backgroundPulseRed {
             0%, 100% {
-                background-color: white; /* Start and end with white background */
+                background-color: white;
             }
             50% {
-                background-color: lightcoral; /* Pulse to light red at 50% */
+                background-color: lightcoral;
             }
         }
 
@@ -48,7 +48,7 @@
         }
 
         #infiniteImage {
-            display: none; /* Initially hidden */
+            display: none;
             margin-top: 20px;
         }
 
@@ -62,10 +62,10 @@
         }
 
         #infiniteImage {
-            display: none; /* Initially hidden */
+            display: none;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Fit the image within the container */
+            object-fit: contain;
         }
     </style>
 </head>
@@ -76,6 +76,11 @@
     </div>
 
     <script>
+        function getUUIDFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('uuid');
+        }
+
         function formatTime(seconds) {
             const min = Math.floor(seconds / 60);
             const sec = seconds % 60;
@@ -83,7 +88,13 @@
         }
 
         function displayTimerValue() {
-            fetch('http://127.0.0.1:5001/api/timer')
+            const uuid = getUUIDFromURL();
+            if (!uuid) {
+                document.getElementById('timerDisplay').innerText = 'No UUID provided!';
+                return;
+            }
+
+            fetch(`http://127.0.0.1:5001/api/timer/${uuid}`)
                 .then(response => response.json())
                 .then(data => {
                     const timerDisplay = document.getElementById('timerDisplay');
@@ -91,15 +102,13 @@
                     const infiniteImage = document.getElementById('infiniteImage');
 
                     if (data.timer === -999) {
-                        timerDisplay.innerText = ""; // Clear the text
+                        timerDisplay.innerText = "";
                         infiniteImage.style.display = 'block';
-
-                        // Remove background animation class when timer is -999
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
-                        return;  // Exit the function early
+                        return;
                     }
 
-                    infiniteImage.style.display = 'none'; // Hide the image if not in infinite mode
+                    infiniteImage.style.display = 'none';
 
                     if (data.timer === -1) {
                         timerDisplay.innerText = "Let's Go!";
@@ -108,13 +117,11 @@
                     }
 
                     if (data.timer <= 30 && data.timer > 15) {
-                        const formattedTime = formatTime(data.timer);
-                        timerDisplay.innerText = formattedTime;
+                        timerDisplay.innerText = formatTime(data.timer);
                         body.classList.remove('pulsing-red');
                         body.classList.add('pulsing-yellow');
                     } else if (data.timer <= 15 && data.timer > 0) {
-                        const formattedTime = formatTime(data.timer);
-                        timerDisplay.innerText = formattedTime;
+                        timerDisplay.innerText = formatTime(data.timer);
                         body.classList.remove('pulsing-yellow');
                         body.classList.add('pulsing-red');
                     } else if (data.timer === 0) {
@@ -122,8 +129,7 @@
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
                         body.style.backgroundColor = 'white';
                     } else {
-                        const formattedTime = formatTime(data.timer);
-                        timerDisplay.innerText = formattedTime;
+                        timerDisplay.innerText = formatTime(data.timer);
                         body.classList.remove('pulsing-yellow', 'pulsing-red');
                     }
                 })
