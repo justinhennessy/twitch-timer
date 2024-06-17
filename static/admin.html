@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Timers Status</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #282c34;
+            color: #61dafb;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin: 20px 0;
+            animation: fadeIn 2s ease;
+        }
+
+        table {
+            width: 100%;
+            max-width: 800px;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            animation: slideIn 1s ease;
+        }
+
+        th, td {
+            padding: 15px;
+            border: 1px solid #444;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: #61dafb;
+        }
+
+        tr {
+            transition: background-color 0.3s ease;
+        }
+
+        tr:nth-child(even) {
+            background-color: #2c2f36;
+        }
+
+        tr:hover {
+            background-color: #3a3f47;
+        }
+
+        .active {
+            background-color: #1b5e20 !important;
+        }
+
+        .inactive {
+            background-color: #b71c1c !important;
+        }
+
+        a {
+            color: #61dafb;
+            text-decoration: none;
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .nowrap {
+            white-space: nowrap; /* Prevent wrapping */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            table, th, td {
+                font-size: 0.9em;
+            }
+
+            a, .nowrap {
+                white-space: normal; /* Allow wrapping on small screens */
+            }
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%; /* Position the tooltip above the text */
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Timers Status</h1>
+    <table id="timersTable">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>UUID</th>
+                <th>Status</th>
+                <th>Last Modified</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/timers_status')
+                .then(response => response.json())
+                .then(data => {
+                    const baseUrl = window.location.origin;
+                    const timersTable = document.getElementById('timersTable').getElementsByTagName('tbody')[0];
+                    data.timers.forEach(timer => {
+                        const row = timersTable.insertRow();
+                        row.className = timer.is_active ? 'active' : 'inactive';
+                        row.insertCell(0).textContent = timer.email;
+                        const uuidCell = row.insertCell(1);
+                        const uuidLink = document.createElement('a');
+                        uuidLink.href = `${baseUrl}/timer.html?uuid=${timer.uuid}`;
+                        uuidLink.textContent = timer.uuid;
+                        uuidLink.target = "_blank";
+                        uuidLink.className = "nowrap";
+                        uuidCell.appendChild(uuidLink);
+
+                        const statusCell = row.insertCell(2);
+                        if (timer.is_active) {
+                            const statusDiv = document.createElement('div');
+                            statusDiv.textContent = 'Active';
+                            statusDiv.classList.add('tooltip');
+                            statusDiv.addEventListener('mouseover', () => {
+                                fetch(`/api/timer/${timer.uuid}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        const tooltipSpan = document.createElement('span');
+                                        tooltipSpan.className = 'tooltiptext';
+                                        tooltipSpan.textContent = `Time: ${data.timer} sec`;
+                                        statusDiv.appendChild(tooltipSpan);
+                                    });
+                            });
+                            statusCell.appendChild(statusDiv);
+                        } else {
+                            statusCell.textContent = 'Inactive';
+                        }
+
+                        const lastModifiedCell = row.insertCell(3);
+                        lastModifiedCell.textContent = new Date(timer.last_modified).toLocaleString();
+                        lastModifiedCell.className = "nowrap";
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Custom Timers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        input[type="email"] {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="submit"] {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .message, .warning {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: left;
+            max-width: 600px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .message {
+            background-color: #e0ffe0;
+            border: 1px solid #00a000;
+            color: #006000;
+        }
+
+        .warning {
+            background-color: #ffe0e0;
+            border: 1px solid #a00000;
+            color: #600000;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        pre {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            overflow-x: auto;
+            white-space: pre-wrap;  /* Wrap the code */
+            word-wrap: break-word;  /* Wrap long words */
+        }
+
+        code {
+            font-family: monospace;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            p, .message, .warning {
+                max-width: 100%;
+            }
+
+            pre {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1 id="heading">Register for Custom Timers</h1>
+    <p id="intro">Welcome! This service allows you to create custom timers that you can interact with from places like Twitch chat. Simply enter your email address to get started.</p>
+    <form id="registerForm">
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        <input type="submit" value="Register">
+    </form>
+    <div class="message hidden" id="message"></div>
+    <div class="warning hidden" id="warning">Do not share your unique URL with anyone.</div>
+
+    <script>
+        let baseUrl;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetch('/api/base_url')
+                .then(response => response.json())
+                .then(data => {
+                    baseUrl = data.base_url;
+                });
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            fetch(baseUrl + '/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const heading = document.getElementById('heading');
+                const intro = document.getElementById('intro');
+                const form = document.getElementById('registerForm');
+                const messageDiv = document.getElementById('message');
+                const warningDiv = document.getElementById('warning');
+
+                heading.innerText = 'Here is your very own timer';
+                intro.style.display = 'none';
+                form.style.display = 'none';
+
+                messageDiv.innerHTML = `
+                    <p>Your unique timer URL: <a href="${baseUrl}/timer.html?uuid=${data.uuid}" target="_blank">${baseUrl}/timer.html?uuid=${data.uuid}</a></p>
+                    <p>Use the following commands in NightBOT:</p>
+                    <p><b>!timer command:</b><br>
+                    <pre><code>\$(eval const rawResponse = \`$(urlfetch json ${baseUrl}/api/\$(query))\`; try { const response = JSON.parse(rawResponse); response.message ? 'Done! [5s cooldown, 30s for mega add]' : 'Unexpected response'; } catch (e) { \`Error parsing JSON. Raw response: \${rawResponse}\`; })</code></pre></p>
+                    <p><b>!at (add time) command:</b><br>
+                    <pre><code>Add an alias "!timer add?t=30" to add 30 seconds to the timer</code></pre></p>
+                `;
+                messageDiv.classList.remove('hidden');
+                warningDiv.classList.remove('hidden');
+            });
+        });
+
+        // Reset the page to the initial state upon refresh
+        window.onload = function() {
+            const heading = document.getElementById('heading');
+            const intro = document.getElementById('intro');
+            const form = document.getElementById('registerForm');
+            const messageDiv = document.getElementById('message');
+            const warningDiv = document.getElementById('warning');
+
+            heading.innerText = 'Register for Custom Timers';
+            intro.style.display = 'block';
+            form.style.display = 'flex';
+            messageDiv.classList.add('hidden');
+            warningDiv.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
