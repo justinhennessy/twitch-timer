@@ -34,9 +34,25 @@ if os.path.exists(email_to_uuid_file):
 else:
     email_to_uuid = {}
 
+# Log the structure of email_to_uuid
+logging.debug(f"email_to_uuid structure: {email_to_uuid}")
+
 # Initialize timers from email_to_uuid mapping
-for user_uuid in email_to_uuid.values():
-    timers[user_uuid] = TimerManager(bucket_name, user_uuid, aws_profile)
+for email, data in email_to_uuid.items():
+    logging.debug(f"Initializing timer for email: {email}, data: {data}")
+    timers[data['uuid']] = TimerManager(bucket_name, data['uuid'], aws_profile)
+
+def update_last_viewed(uuid):
+    email_to_uuid_file = 'email_to_uuid.txt'
+    if os.path.exists(email_to_uuid_file):
+        with open(email_to_uuid_file, 'r') as f:
+            email_to_uuid = json.load(f)
+    for email, data in email_to_uuid.items():
+        if data['uuid'] == uuid:
+            email_to_uuid[email]['last_viewed'] = datetime.now().isoformat()
+            break
+    with open(email_to_uuid_file, 'w') as f:
+        json.dump(email_to_uuid, f, indent=4)
 
 @app.route("/api/create", methods=['POST'])
 def create_timer():
@@ -49,6 +65,7 @@ def get_timer(uuid):
     timer_manager = timers.get(uuid)
     if timer_manager:
         remaining_time = timer_manager.get_remaining_time()
+        update_last_viewed(uuid)
         app.logger.info(f"Request from IP: {request.remote_addr}, Process: {os.getpid()} - Remaining time: {remaining_time}")
         return jsonify({"timer": remaining_time})
     else:
@@ -99,21 +116,21 @@ def start_time(uuid):
 
 @app.route("/api/timers", methods=['GET'])
 def list_timers():
-    return jsonify({"active_timers": list(timers.keys())})
+    return jsonify({"active_timers": [data['uuid'] for data in email_to_uuid.values()]})
 
 @app.route("/api/register", methods=['POST'])
 def register():
     data = request.get_json()
     email = data['email']
     if email in email_to_uuid:
-        user_uuid = email_to_uuid[email]
+        user_uuid = email_to_uuid[email]['uuid']
     else:
         user_uuid = str(uuid_lib.uuid4())
-        email_to_uuid[email] = user_uuid
+        email_to_uuid[email] = {"uuid": user_uuid, "last_viewed": None}
         timers[user_uuid] = TimerManager(bucket_name, user_uuid, aws_profile)
         # Save the updated email to UUID mapping
         with open(email_to_uuid_file, 'w') as f:
-            json.dump(email_to_uuid, f)
+            json.dump(email_to_uuid, f, indent=4)
     return jsonify({"uuid": user_uuid})
 
 @app.route("/api/base_url", methods=['GET'])
@@ -123,7 +140,8 @@ def get_base_url():
 @app.route("/api/timers_status", methods=['GET'])
 def timers_status():
     timer_status = []
-    for email, uuid in email_to_uuid.items():
+    for email, data in email_to_uuid.items():
+        uuid = data['uuid']
         response = s3_client.head_object(Bucket=bucket_name, Key=uuid)
         last_modified = response['LastModified']
         is_active = (datetime.now(last_modified.tzinfo) - last_modified) < timedelta(minutes=1)
@@ -131,7 +149,8 @@ def timers_status():
             "uuid": uuid,
             "email": email,
             "is_active": is_active,
-            "last_modified": last_modified.isoformat()
+            "last_modified": last_modified.isoformat(),
+            "last_viewed": data.get('last_viewed')
         })
     return jsonify({"timers": timer_status})
 
@@ -146,6 +165,10 @@ def serve_register_html():
 @app.route('/admin.html')
 def serve_admin_html():
     return send_from_directory('static', 'admin.html')
+
+@app.route('/favicon.ico')
+def serve_favicon():
+    return send_from_directory('static', 'favicon.ico')
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5001, debug=True)
