@@ -1,0 +1,5 @@
+#!/bin/bash
+
+uuid=$1 && shift
+
+curl "http://127.0.0.1:5001/api/start/$uuid"

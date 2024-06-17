@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Fetch the list of active timers
+response=$(curl -s http://127.0.0.1:5001/api/timers)
+
+# Extract the UUIDs from the JSON response
+uuids=$(echo "$response" | jq -r '.active_timers[]')
+
+# Check if there are any active timers
+if [ -z "$uuids" ]; then
+  echo "There are no active timers."
+else
+  # Iterate over each UUID and perform the desired action
+  for uuid in $uuids; do
+    echo "Processing timer with UUID: $uuid"
+    curl "http://127.0.0.1:5001/api/timer/$uuid"
+  done
+fi
