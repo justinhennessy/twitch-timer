@@ -20,19 +20,26 @@ CORS(app)
 bucket_name = os.getenv('BUCKET_NAME')
 aws_profile = 'twitch-timer'
 base_url = os.getenv('BASE_URL')
+email_to_uuid_file_s3_key = 'email_to_uuid.txt'
 timers = {}
 
 # Initialize S3 client
 session = boto3.Session(profile_name=aws_profile)
 s3_client = session.client('s3')
 
+def read_email_to_uuid_from_s3():
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key=email_to_uuid_file_s3_key)
+        email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
+    except s3_client.exceptions.NoSuchKey:
+        email_to_uuid = {}
+    return email_to_uuid
+
+def write_email_to_uuid_to_s3(email_to_uuid):
+    s3_client.put_object(Bucket=bucket_name, Key=email_to_uuid_file_s3_key, Body=json.dumps(email_to_uuid, indent=4))
+
 # Load email to UUID mapping
-email_to_uuid_file = 'email_to_uuid.txt'
-if os.path.exists(email_to_uuid_file):
-    with open(email_to_uuid_file, 'r') as f:
-        email_to_uuid = json.load(f)
-else:
-    email_to_uuid = {}
+email_to_uuid = read_email_to_uuid_from_s3()
 
 # Log the structure of email_to_uuid
 logging.debug(f"email_to_uuid structure: {email_to_uuid}")
@@ -43,16 +50,12 @@ for email, data in email_to_uuid.items():
     timers[data['uuid']] = TimerManager(bucket_name, data['uuid'], aws_profile)
 
 def update_last_viewed(uuid):
-    email_to_uuid_file = 'email_to_uuid.txt'
-    if os.path.exists(email_to_uuid_file):
-        with open(email_to_uuid_file, 'r') as f:
-            email_to_uuid = json.load(f)
+    email_to_uuid = read_email_to_uuid_from_s3()
     for email, data in email_to_uuid.items():
         if data['uuid'] == uuid:
             email_to_uuid[email]['last_viewed'] = datetime.now().isoformat()
             break
-    with open(email_to_uuid_file, 'w') as f:
-        json.dump(email_to_uuid, f, indent=4)
+    write_email_to_uuid_to_s3(email_to_uuid)
 
 @app.route("/api/create", methods=['POST'])
 def create_timer():
@@ -122,15 +125,14 @@ def list_timers():
 def register():
     data = request.get_json()
     email = data['email']
+    email_to_uuid = read_email_to_uuid_from_s3()
     if email in email_to_uuid:
         user_uuid = email_to_uuid[email]['uuid']
     else:
         user_uuid = str(uuid_lib.uuid4())
         email_to_uuid[email] = {"uuid": user_uuid, "last_viewed": None}
         timers[user_uuid] = TimerManager(bucket_name, user_uuid, aws_profile)
-        # Save the updated email to UUID mapping
-        with open(email_to_uuid_file, 'w') as f:
-            json.dump(email_to_uuid, f, indent=4)
+        write_email_to_uuid_to_s3(email_to_uuid)
     return jsonify({"uuid": user_uuid})
 
 @app.route("/api/base_url", methods=['GET'])
@@ -139,6 +141,7 @@ def get_base_url():
 
 @app.route("/api/timers_status", methods=['GET'])
 def timers_status():
+    email_to_uuid = read_email_to_uuid_from_s3()
     timer_status = []
     for email, data in email_to_uuid.items():
         uuid = data['uuid']

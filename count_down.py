@@ -20,16 +20,17 @@ def read_time(file_key):
 def write_time(file_key, time_value):
     s3_client.put_object(Bucket=bucket_name, Key=file_key, Body=str(time_value))
 
-def read_email_to_uuid_mapping():
-    email_to_uuid_file = 'email_to_uuid.txt'
-    if os.path.exists(email_to_uuid_file):
-        with open(email_to_uuid_file, 'r') as f:
-            return json.load(f)
-    return {}
+def read_email_to_uuid_from_s3():
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key='email_to_uuid.txt')
+        email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
+    except s3_client.exceptions.NoSuchKey:
+        email_to_uuid = {}
+    return email_to_uuid
 
 def countdown_timer():
     while True:
-        email_to_uuid = read_email_to_uuid_mapping()
+        email_to_uuid = read_email_to_uuid_from_s3()
 
         for email, data in email_to_uuid.items():
             uuid = data['uuid']
