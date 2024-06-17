@@ -36,6 +36,7 @@
             padding: 15px;
             border: 1px solid #444;
             text-align: left;
+            white-space: nowrap; /* Prevent wrapping */
         }
 
         th {
@@ -77,6 +78,25 @@
             white-space: nowrap; /* Prevent wrapping */
         }
 
+        .button-icon {
+            cursor: pointer;
+            padding: 5px;
+            margin: 0 5px;
+            font-size: 1em;
+            background: none;
+            border: none;
+            color: #61dafb;
+        }
+
+        .button-icon:hover {
+            color: #ffffff;
+        }
+
+        .actions-cell {
+            display: flex;
+            align-items: center;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -94,6 +114,7 @@
 
             table, th, td {
                 font-size: 0.9em;
+                white-space: normal; /* Allow wrapping on small screens */
             }
 
             a, .nowrap {
@@ -129,6 +150,7 @@
             opacity: 1;
         }
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
     <h1>Timers Status</h1>
@@ -138,7 +160,9 @@
                 <th>Email</th>
                 <th>UUID</th>
                 <th>Status</th>
-                <th>Last Modified</th>
+                <th>Timer Updated</th>
+                <th>Last Viewed</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -187,9 +211,35 @@
                         const lastModifiedCell = row.insertCell(3);
                         lastModifiedCell.textContent = new Date(timer.last_modified).toLocaleString();
                         lastModifiedCell.className = "nowrap";
+
+                        const lastViewedCell = row.insertCell(4);
+                        lastViewedCell.textContent = timer.last_viewed ? new Date(timer.last_viewed).toLocaleString() : 'Never';
+                        lastViewedCell.className = "nowrap";
+
+                        const actionsCell = row.insertCell(5);
+                        actionsCell.className = 'actions-cell';
+                        const startButton = document.createElement('button');
+                        startButton.className = 'button-icon';
+                        startButton.innerHTML = '<i class="fas fa-play"></i>';
+                        startButton.title = 'Start Timer';
+                        startButton.addEventListener('click', () => {
+                            fetch(`/api/start/${timer.uuid}`, { method: 'GET' })
+                                .then(response => response.json())
+                                .then(data => alert('Timer started'));
+                        });
+                        const resetButton = document.createElement('button');
+                        resetButton.className = 'button-icon';
+                        resetButton.innerHTML = '<i class="fas fa-redo"></i>';
+                        resetButton.title = 'Reset Timer';
+                        resetButton.addEventListener('click', () => {
+                            fetch(`/api/reset/${timer.uuid}`, { method: 'GET' })
+                                .then(response => response.json())
+                                .then(data => alert('Timer reset'));
+                        });
+                        actionsCell.appendChild(startButton);
+                        actionsCell.appendChild(resetButton);
                     });
                 });
         });
     </script>
 </body>
-</html>
