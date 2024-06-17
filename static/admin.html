@@ -3,243 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Timers Status</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #282c34;
-            color: #61dafb;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1 {
-            margin: 20px 0;
-            animation: fadeIn 2s ease;
-        }
-
-        table {
-            width: 100%;
-            max-width: 800px;
-            border-collapse: collapse;
-            margin-top: 20px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            animation: slideIn 1s ease;
-        }
-
-        th, td {
-            padding: 15px;
-            border: 1px solid #444;
-            text-align: left;
-            white-space: nowrap; /* Prevent wrapping */
-        }
-
-        th {
-            background-color: #333;
-            color: #61dafb;
-        }
-
-        tr {
-            transition: background-color 0.3s ease;
-        }
-
-        tr:nth-child(even) {
-            background-color: #2c2f36;
-        }
-
-        tr:hover {
-            background-color: #3a3f47;
-        }
-
-        .active {
-            background-color: #1b5e20 !important;
-        }
-
-        .inactive {
-            background-color: #b71c1c !important;
-        }
-
-        a {
-            color: #61dafb;
-            text-decoration: none;
-            white-space: nowrap; /* Prevent wrapping */
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .nowrap {
-            white-space: nowrap; /* Prevent wrapping */
-        }
-
-        .button-icon {
-            cursor: pointer;
-            padding: 5px;
-            margin: 0 5px;
-            font-size: 1em;
-            background: none;
-            border: none;
-            color: #61dafb;
-        }
-
-        .button-icon:hover {
-            color: #ffffff;
-        }
-
-        .actions-cell {
-            display: flex;
-            align-items: center;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideIn {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            table, th, td {
-                font-size: 0.9em;
-                white-space: normal; /* Allow wrapping on small screens */
-            }
-
-            a, .nowrap {
-                white-space: normal; /* Allow wrapping on small screens */
-            }
-        }
-
-        .tooltip {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 120px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%; /* Position the tooltip above the text */
-            left: 50%;
-            margin-left: -60px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-    </style>
+    <title>Admin - Timer Management</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <h1>Timers Status</h1>
-    <table id="timersTable">
+    <h1>Admin - Timer Management</h1>
+    <table id="timersTable" class="table">
         <thead>
             <tr>
                 <th>Email</th>
                 <th>UUID</th>
-                <th>Status</th>
                 <th>Timer Updated</th>
                 <th>Last Viewed</th>
+                <th>Status</th>
+                <th>GET Count</th>
+                <th>PUT Count</th>
                 <th>Actions</th>
             </tr>
         </thead>
+        <tbody id="timersBody">
+            <!-- Timer rows will be added here dynamically -->
+        </tbody>
+    </table>
+    <h2>S3 Call Counts</h2>
+    <table id="s3CountsTable" class="table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Count</th>
+            </tr>
+        </thead>
         <tbody>
+            <tr>
+                <td>GET</td>
+                <td id="getCount">0</td>
+            </tr>
+            <tr>
+                <td>PUT</td>
+                <td id="putCount">0</td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>DB Store S3 Call Counts</h2>
+    <table id="emailToUuidS3CountsTable" class="table">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>GET</td>
+                <td id="emailGetCount">0</td>
+            </tr>
+            <tr>
+                <td>PUT</td>
+                <td id="emailPutCount">0</td>
+            </tr>
         </tbody>
     </table>
 
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip"></div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            fetch('/api/timers_status')
+        const baseUrl = '/api';
+
+        function fetchTimers() {
+            fetch(`${baseUrl}/timers_status`)
                 .then(response => response.json())
                 .then(data => {
-                    const baseUrl = window.location.origin;
-                    const timersTable = document.getElementById('timersTable').getElementsByTagName('tbody')[0];
+                    const timersBody = document.getElementById('timersBody');
+                    timersBody.innerHTML = '';
                     data.timers.forEach(timer => {
-                        const row = timersTable.insertRow();
-                        row.className = timer.is_active ? 'active' : 'inactive';
-                        row.insertCell(0).textContent = timer.email;
-                        const uuidCell = row.insertCell(1);
-                        const uuidLink = document.createElement('a');
-                        uuidLink.href = `${baseUrl}/timer.html?uuid=${timer.uuid}`;
-                        uuidLink.textContent = timer.uuid;
-                        uuidLink.target = "_blank";
-                        uuidLink.className = "nowrap";
-                        uuidCell.appendChild(uuidLink);
+                        const row = document.createElement('tr');
+                        row.classList.add(timer.is_active ? 'active' : 'inactive');
+                        row.innerHTML = `
+                            <td>${timer.email}</td>
+                            <td><a href="/timer.html?uuid=${timer.uuid}" target="_blank">${timer.uuid}</a></td>
+                            <td>${timer.last_modified}</td>
+                            <td>${timer.last_viewed || 'Never'}</td>
+                            <td class="status" data-uuid="${timer.uuid}">${timer.is_active ? 'Active' : 'Inactive'}</td>
+                            <td id="getCount-${timer.uuid}">${timer.get_count}</td>
+                            <td id="putCount-${timer.uuid}">${timer.put_count}</td>
+                            <td>
+                                <i class="fas fa-play" onclick="startTimer('${timer.uuid}')" title="Start Timer"></i>
+                                <i class="fas fa-redo" onclick="resetTimer('${timer.uuid}')" title="Reset Timer"></i>
+                            </td>
+                        `;
+                        timersBody.appendChild(row);
+                    });
 
-                        const statusCell = row.insertCell(2);
-                        if (timer.is_active) {
-                            const statusDiv = document.createElement('div');
-                            statusDiv.textContent = 'Active';
-                            statusDiv.classList.add('tooltip');
-                            statusDiv.addEventListener('mouseover', () => {
-                                fetch(`/api/timer/${timer.uuid}`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        const tooltipSpan = document.createElement('span');
-                                        tooltipSpan.className = 'tooltiptext';
-                                        tooltipSpan.textContent = `Time: ${data.timer} sec`;
-                                        statusDiv.appendChild(tooltipSpan);
-                                    });
-                            });
-                            statusCell.appendChild(statusDiv);
-                        } else {
-                            statusCell.textContent = 'Inactive';
-                        }
-
-                        const lastModifiedCell = row.insertCell(3);
-                        lastModifiedCell.textContent = new Date(timer.last_modified).toLocaleString();
-                        lastModifiedCell.className = "nowrap";
-
-                        const lastViewedCell = row.insertCell(4);
-                        lastViewedCell.textContent = timer.last_viewed ? new Date(timer.last_viewed).toLocaleString() : 'Never';
-                        lastViewedCell.className = "nowrap";
-
-                        const actionsCell = row.insertCell(5);
-                        actionsCell.className = 'actions-cell';
-                        const startButton = document.createElement('button');
-                        startButton.className = 'button-icon';
-                        startButton.innerHTML = '<i class="fas fa-play"></i>';
-                        startButton.title = 'Start Timer';
-                        startButton.addEventListener('click', () => {
-                            fetch(`/api/start/${timer.uuid}`, { method: 'GET' })
-                                .then(response => response.json())
-                                .then(data => alert('Timer started'));
-                        });
-                        const resetButton = document.createElement('button');
-                        resetButton.className = 'button-icon';
-                        resetButton.innerHTML = '<i class="fas fa-redo"></i>';
-                        resetButton.title = 'Reset Timer';
-                        resetButton.addEventListener('click', () => {
-                            fetch(`/api/reset/${timer.uuid}`, { method: 'GET' })
-                                .then(response => response.json())
-                                .then(data => alert('Timer reset'));
-                        });
-                        actionsCell.appendChild(startButton);
-                        actionsCell.appendChild(resetButton);
+                    // Add hover event listeners
+                    document.querySelectorAll('.status').forEach(statusCell => {
+                        statusCell.addEventListener('mouseenter', showTooltip);
+                        statusCell.addEventListener('mouseleave', hideTooltip);
                     });
                 });
+        }
+
+        function fetchS3CallCounts() {
+            fetch(`${baseUrl}/s3_call_counts`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('getCount').innerText = data.GET;
+                    document.getElementById('putCount').innerText = data.PUT;
+                    document.getElementById('emailGetCount').innerText = data.email_get;
+                    document.getElementById('emailPutCount').innerText = data.email_put;
+
+                    // Update GET and PUT counts for each timer
+                    data.timers.forEach(timer => {
+                        document.getElementById(`getCount-${timer.uuid}`).innerText = timer.get_count;
+                        document.getElementById(`putCount-${timer.uuid}`).innerText = timer.put_count;
+                    });
+                });
+        }
+
+        function startTimer(uuid) {
+            fetch(`${baseUrl}/start/${uuid}`)
+                .then(response => response.json())
+                .then(() => {
+                    fetchTimers();
+                });
+        }
+
+        function resetTimer(uuid) {
+            fetch(`${baseUrl}/reset/${uuid}`)
+                .then(response => response.json())
+                .then(() => {
+                    fetchTimers();
+                });
+        }
+
+        function showTooltip(event) {
+            const status = event.target.innerText;
+            if (status === 'Active') {
+                const uuid = event.target.getAttribute('data-uuid');
+                fetch(`${baseUrl}/timer/${uuid}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const tooltip = document.getElementById('tooltip');
+                        tooltip.innerText = `Current Timer Value: ${data.timer}`;
+                        tooltip.style.display = 'block';
+                        tooltip.style.left = `${event.pageX + 10}px`;
+                        tooltip.style.top = `${event.pageY - 30}px`;  // Position above the cursor
+                    });
+            }
+        }
+
+        function hideTooltip() {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetchTimers();
+            fetchS3CallCounts();
+            setInterval(fetchTimers, 5000); // Update timer data every 5 seconds
+            setInterval(fetchS3CallCounts, 5000); // Update S3 call counts every 5 seconds
         });
     </script>
 </body>
+</html>

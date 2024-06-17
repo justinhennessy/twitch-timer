@@ -4,70 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Timer Display</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: white; /* Initial background color */
-        }
-
-        .pulsing-yellow {
-            animation: backgroundPulseYellow 1s ease-in-out infinite;
-        }
-
-        .pulsing-red {
-            animation: backgroundPulseRed 1s ease-in-out infinite;
-        }
-
-        @keyframes backgroundPulseYellow {
-            0%, 100% {
-                background-color: white; /* Start and end with white background */
-            }
-            50% {
-                background-color: lightyellow; /* Pulse to light yellow at 50% */
-            }
-        }
-
-        @keyframes backgroundPulseRed {
-            0%, 100% {
-                background-color: white; /* Start and end with white background */
-            }
-            50% {
-                background-color: lightcoral; /* Pulse to light red at 50% */
-            }
-        }
-
-        #timerDisplay {
-            font-family: 'Outfit', sans-serif;
-            font-size: 9em;
-        }
-
-        #infiniteImage {
-            display: none; /* Initially hidden */
-            margin-top: 20px;
-        }
-
-        .image-container {
-            width: 700px;
-            height: 220px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        #infiniteImage {
-            display: none; /* Initially hidden */
-            width: 100%;
-            height: 100%;
-            object-fit: contain; /* Fit the image within the container */
-        }
-    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&display=swap">
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/timer.css">
 </head>
 <body>
     <div id="timerDisplay">Loading...</div>
@@ -76,9 +15,6 @@
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const uuid = urlParams.get('uuid');
-
         function formatTime(seconds) {
             const min = Math.floor(seconds / 60);
             const sec = seconds % 60;
@@ -86,6 +22,14 @@
         }
 
         function displayTimerValue() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const uuid = urlParams.get('uuid');
+
+            if (!uuid) {
+                document.getElementById('timerDisplay').innerText = 'No timer specified!';
+                return;
+            }
+
             fetch(`/api/timer/${uuid}`)
                 .then(response => response.json())
                 .then(data => {
@@ -137,7 +81,7 @@
         }
 
         displayTimerValue();
-        setInterval(displayTimerValue, 1000);  // Update the timer display every second
+        setInterval(displayTimerValue, 1000);
     </script>
 </body>
 </html>

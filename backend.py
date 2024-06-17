@@ -27,9 +27,23 @@ timers = {}
 session = boto3.Session(profile_name=aws_profile)
 s3_client = session.client('s3')
 
+# Track S3 GET and PUT calls
+s3_call_counts = {"GET": 0, "PUT": 0, "email_get": 0, "email_put": 0}
+timer_call_counts = {}
+
+def track_s3_call(call_type, timer_uuid=None):
+    if call_type in s3_call_counts:
+        s3_call_counts[call_type] += 1
+    if timer_uuid:
+        if timer_uuid not in timer_call_counts:
+            timer_call_counts[timer_uuid] = {"GET": 0, "PUT": 0}
+        if call_type in timer_call_counts[timer_uuid]:
+            timer_call_counts[timer_uuid][call_type] += 1
+
 def read_email_to_uuid_from_s3():
     try:
         response = s3_client.get_object(Bucket=bucket_name, Key=email_to_uuid_file_s3_key)
+        track_s3_call("email_get")
         email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
     except s3_client.exceptions.NoSuchKey:
         email_to_uuid = {}
@@ -37,6 +51,7 @@ def read_email_to_uuid_from_s3():
 
 def write_email_to_uuid_to_s3(email_to_uuid):
     s3_client.put_object(Bucket=bucket_name, Key=email_to_uuid_file_s3_key, Body=json.dumps(email_to_uuid, indent=4))
+    track_s3_call("email_put")
 
 # Load email to UUID mapping
 email_to_uuid = read_email_to_uuid_from_s3()
@@ -69,6 +84,7 @@ def get_timer(uuid):
     if timer_manager:
         remaining_time = timer_manager.get_remaining_time()
         update_last_viewed(uuid)
+        track_s3_call("GET", uuid)
         app.logger.info(f"Request from IP: {request.remote_addr}, Process: {os.getpid()} - Remaining time: {remaining_time}")
         return jsonify({"timer": remaining_time})
     else:
@@ -82,10 +98,12 @@ def add_time(uuid):
         t_param = request.args.get('t', '30')
         if t_param.lower() == 'infinite':
             timer_manager.set_infinite_time()
+            track_s3_call("PUT", uuid)
             return jsonify({"message": "Timer set to infinite", "timer": -999})
         else:
             seconds = int(t_param)
             timer_manager.add_time(seconds)
+            track_s3_call("PUT", uuid)
             return jsonify({"message": f"Added {seconds} seconds", "timer": timer_manager.get_remaining_time()})
     else:
         return jsonify({"error": "Timer not found"}), 404
@@ -95,6 +113,7 @@ def reduce_time(uuid):
     timer_manager = timers.get(uuid)
     if timer_manager:
         timer_manager.reduce_time()
+        track_s3_call("PUT", uuid)
         return jsonify({"message": "Reduced 30 seconds", "timer": timer_manager.get_remaining_time()})
     else:
         return jsonify({"error": "Timer not found"}), 404
@@ -104,6 +123,7 @@ def reset_time(uuid):
     timer_manager = timers.get(uuid)
     if timer_manager:
         timer_manager.reset_time()
+        track_s3_call("PUT", uuid)
         return jsonify({"message": "Timer has been reset", "timer": timer_manager.get_remaining_time()})
     else:
         return jsonify({"error": "Timer not found"}), 404
@@ -112,8 +132,15 @@ def reset_time(uuid):
 def start_time(uuid):
     timer_manager = timers.get(uuid)
     if timer_manager:
-        timer_manager.start_time()
-        return jsonify({"message": "Timer started at 5 minutes", "timer": timer_manager.get_remaining_time()})
+        email_to_uuid = read_email_to_uuid_from_s3()
+        for email, data in email_to_uuid.items():
+            if data['uuid'] == uuid:
+                default_time = data.get('default_time', 300)  # Default to 300 seconds if not found
+                timer_manager.default_time = default_time
+                timer_manager.start_time()
+                track_s3_call("PUT", uuid)
+                break
+        return jsonify({"message": "Timer started", "timer": timer_manager.get_remaining_time()})
     else:
         return jsonify({"error": "Timer not found"}), 404
 
@@ -130,7 +157,11 @@ def register():
         user_uuid = email_to_uuid[email]['uuid']
     else:
         user_uuid = str(uuid_lib.uuid4())
-        email_to_uuid[email] = {"uuid": user_uuid, "last_viewed": None}
+        email_to_uuid[email] = {
+            "uuid": user_uuid,
+            "last_viewed": None,
+            "default_time": 300  # Default to 300 seconds
+        }
         timers[user_uuid] = TimerManager(bucket_name, user_uuid, aws_profile)
         write_email_to_uuid_to_s3(email_to_uuid)
     return jsonify({"uuid": user_uuid})
@@ -146,6 +177,7 @@ def timers_status():
     for email, data in email_to_uuid.items():
         uuid = data['uuid']
         response = s3_client.head_object(Bucket=bucket_name, Key=uuid)
+        track_s3_call("GET", uuid)
         last_modified = response['LastModified']
         is_active = (datetime.now(last_modified.tzinfo) - last_modified) < timedelta(minutes=1)
         timer_status.append({
@@ -153,9 +185,28 @@ def timers_status():
             "email": email,
             "is_active": is_active,
             "last_modified": last_modified.isoformat(),
-            "last_viewed": data.get('last_viewed')
+            "last_viewed": data.get('last_viewed'),
+            "get_count": timer_call_counts.get(uuid, {}).get("GET", 0),
+            "put_count": timer_call_counts.get(uuid, {}).get("PUT", 0)
         })
     return jsonify({"timers": timer_status})
+
+@app.route("/api/s3_call_counts", methods=['GET'])
+def get_s3_call_counts():
+    return jsonify({
+        "GET": s3_call_counts["GET"],
+        "PUT": s3_call_counts["PUT"],
+        "email_get": s3_call_counts["email_get"],
+        "email_put": s3_call_counts["email_put"]
+    })
+
+@app.route("/api/track_s3_call", methods=['POST'])
+def api_track_s3_call():
+    data = request.get_json()
+    call_type = data.get('type')
+    timer_uuid = data.get('uuid')
+    track_s3_call(call_type, timer_uuid)
+    return jsonify({"status": "success"})
 
 @app.route('/timer.html')
 def serve_timer_html():
