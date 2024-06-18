@@ -21,7 +21,7 @@ auth_flow_manager = AuthFlowManager(google_auth_service, 'token.json')
 
 @routes_bp.route('/')
 def serve_login_page():
-    return send_from_directory('static', 'login.html')
+    return send_from_directory('static', 'register.html')
 
 @routes_bp.route("/login")
 def login():

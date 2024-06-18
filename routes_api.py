@@ -111,6 +111,26 @@ def list_timers():
     logger.info(f"List of active timers: {active_timers}")
     return jsonify({"active_timers": active_timers})
 
+@api_bp.route("/api/update_config/<uuid>", methods=['POST'])
+def update_config(uuid):
+    data = request.get_json()
+    default_time = data.get('default_time')
+
+    if default_time is None:
+        return jsonify({"error": "default_time is required"}), 400
+
+    email_to_uuid = read_email_to_uuid_from_s3()
+    for email, details in email_to_uuid.items():
+        if details['uuid'] == uuid:
+            details['default_time'] = default_time
+            write_email_to_uuid_to_s3(email_to_uuid)
+            timers[uuid].default_time = default_time
+            track_s3_call("PUT", uuid)
+            logger.info(f"Updated default time for timer with UUID {uuid} to {default_time} seconds")
+            return jsonify({"message": "Configuration updated"}), 200
+
+    return jsonify({"error": "Timer not found"}), 404
+
 @api_bp.route("/api/register", methods=['POST'])
 def register():
     data = request.get_json()

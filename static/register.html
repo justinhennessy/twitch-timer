@@ -9,13 +9,19 @@
 </head>
 <body>
     <h1 id="heading">Register for Custom Timers</h1>
-    <p id="intro">Welcome! This service allows you to create custom timers that you can interact with from places like Twitch chat. Simply enter your email address to get started.</p>
-    <form id="registerForm" class="hidden">
-        <input type="email" id="email" name="email" placeholder="Enter your email" required>
-        <input type="submit" value="Register">
-    </form>
-    <div id="googleLogin">
-        <button onclick="location.href='/login'">Login with Google</button>
+    <p id="intro">Welcome! This service allows you to create custom timers that you can interact with from places like Twitch chat. Please choose a registration method to get started.</p>
+
+    <div class="registration-methods">
+        <div id="googleLogin" class="registration-option">
+            <button onclick="location.href='/login'">Login with Google</button>
+            <p class="toggle-link" onclick="showEmailLogin()">Login with email instead</p>
+        </div>
+        <div id="emailLogin" class="registration-option hidden">
+            <form id="registerForm">
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <input type="submit" value="Register">
+            </form>
+        </div>
     </div>
 
     <script>
@@ -37,7 +43,7 @@
                         userEmail = data.email;
                         document.getElementById('email').value = userEmail;
                         document.getElementById('googleLogin').style.display = 'none';
-                        document.getElementById('registerForm').classList.remove('hidden');
+                        document.getElementById('emailLogin').classList.remove('hidden');
                     }
                 });
         });
@@ -56,6 +62,11 @@
                 window.location.href = `${baseUrl}/personal_timer.html?uuid=${timerUuid}`;
             });
         });
+
+        function showEmailLogin() {
+            document.getElementById('emailLogin').classList.remove('hidden');
+            document.getElementById('googleLogin').style.display = 'none';
+        }
     </script>
 </body>
 </html>
