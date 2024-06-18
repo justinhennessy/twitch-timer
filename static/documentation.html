@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #555;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+        }
+        .endpoint h3 {
+            margin-bottom: 5px;
+        }
+        .endpoint pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-left: 5px solid #ccc;
+        }
+        .endpoint code {
+            background-color: #eee;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Documentation</h1>
+    <p>This documentation provides details about the API endpoints and how to use them.</p>
+
+    <div class="endpoint">
+        <h2>1. Create Timer</h2>
+        <h3>POST /api/create</h3>
+        <p>Creates a new timer and returns its UUID.</p>
+        <pre><code>curl -X POST http://www.streamtimers.com/api/create</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "uuid": "your-uuid-here"
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>2. Get Timer</h2>
+        <h3>GET /api/timer/&lt;uuid&gt;</h3>
+        <p>Gets the remaining time for the timer with the specified UUID.</p>
+        <pre><code>curl http://www.streamtimers.com/api/timer/your-uuid-here</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "timer": remaining_time_in_seconds
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>3. Add Time</h2>
+        <h3>GET /api/add/&lt;uuid&gt;?t=&lt;seconds&gt;</h3>
+        <p>Adds the specified number of seconds to the timer with the specified UUID. If <code>t=infinite</code>, sets the timer to infinite.</p>
+        <pre><code>curl http://www.streamtimers.com/api/add/your-uuid-here?t=30</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "message": "Added 30 seconds",
+    "timer": new_remaining_time_in_seconds
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>4. Reduce Time</h2>
+        <h3>GET /api/reduce/&lt;uuid&gt;</h3>
+        <p>Reduces 30 seconds from the timer with the specified UUID.</p>
+        <pre><code>curl http://www.streamtimers.com/api/reduce/your-uuid-here</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "message": "Reduced 30 seconds",
+    "timer": new_remaining_time_in_seconds
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>5. Reset Timer</h2>
+        <h3>GET /api/reset/&lt;uuid&gt;</h3>
+        <p>Resets the timer with the specified UUID.</p>
+        <pre><code>curl http://www.streamtimers.com/api/reset/your-uuid-here</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "message": "Timer has been reset",
+    "timer": new_remaining_time_in_seconds
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+        <h2>6. Start Timer</h2>
+        <h3>GET /api/start/&lt;uuid&gt;</h3>
+        <p>Starts the timer with the specified UUID.</p>
+        <pre><code>curl http://www.streamtimers.com/api/start/your-uuid-here</code></pre>
+        <p>Response:</p>
+        <pre><code>{
+    "message": "Timer started",
+    "timer": new_remaining_time_in_seconds
+}</code></pre>
+    </div>
+</body>
+</html>
