@@ -6,7 +6,7 @@ import json
 
 routes_bp = Blueprint('routes', __name__)
 
-ngrok_url = "https://3aae-203-123-109-247.ngrok-free.app"
+base_url = os.getenv('BASE_URL')
 
 oauth_config = OAuthConfig(
     client_secrets_file='client_secrets.json',
@@ -25,14 +25,14 @@ def serve_login_page():
 
 @routes_bp.route("/login")
 def login():
-    authorization_url, state = google_auth_service.initiate_auth_flow(f"{ngrok_url}/oauth2callback")
+    authorization_url, state = google_auth_service.initiate_auth_flow(f"{base_url}/oauth2callback")
     session['state'] = state
     return redirect(authorization_url)
 
 @routes_bp.route("/oauth2callback")
 def oauth2callback():
     state = session['state']
-    google_auth_service.fetch_token(state, request.url, f"{ngrok_url}/oauth2callback")
+    google_auth_service.fetch_token(state, request.url, f"{base_url}/oauth2callback")
     auth_flow_manager.auth_service.save_credentials('token.json')
 
     user_info = google_auth_service.get_user_info()
@@ -40,7 +40,7 @@ def oauth2callback():
         session['email'] = user_info['email']
         session['access_token'] = google_auth_service.credentials.token
 
-        fetch_register_url = f"{ngrok_url}/api/register"
+        fetch_register_url = f"{base_url}/api/register"
         response = requests.post(fetch_register_url, json={"email": user_info['email']})
 
         try:
