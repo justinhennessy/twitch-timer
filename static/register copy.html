@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Custom Timers</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/register.css">
+</head>
+<body>
+    <h1 id="heading">Register for Custom Timers</h1>
+    <p id="intro">Welcome! This service allows you to create custom timers that you can interact with from places like Twitch chat. Simply enter your email address to get started.</p>
+    <form id="registerForm" class="hidden">
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+        <input type="submit" value="Register">
+    </form>
+    <div id="googleLogin">
+        <button onclick="location.href='/login'">Login with Google</button>
+    </div>
+    <div class="container">
+        <div id="config-area" class="config-area hidden">
+            <h2>Configuration</h2>
+            <label for="defaultTime">Default Time (seconds):</label>
+            <input type="number" id="defaultTime" value="300">
+            <button onclick="updateConfig()">Update</button>
+        </div>
+        <div>
+            <div class="message hidden" id="message"></div>
+            <div class="warning hidden" id="warning">Do not share your unique URL with anyone.</div>
+        </div>
+    </div>
+
+    <script>
+        let baseUrl;
+        let timerUuid;
+        let userEmail;
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            fetch('/api/base_url')
+                .then(response => response.json())
+                .then(data => {
+                    baseUrl = data.base_url;
+                });
+
+            // Check if the user is logged in and has an email stored in the session
+            fetch('/api/user_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.email) {
+                        userEmail = data.email;
+                        document.getElementById('email').value = userEmail;
+                        document.getElementById('googleLogin').style.display = 'none';
+                        document.getElementById('registerForm').classList.remove('hidden');
+                    }
+                });
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const email = userEmail || document.getElementById('email').value;
+            fetch(baseUrl + '/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                timerUuid = data.uuid;
+                const heading = document.getElementById('heading');
+                const intro = document.getElementById('intro');
+                const form = document.getElementById('registerForm');
+                const messageDiv = document.getElementById('message');
+                const warningDiv = document.getElementById('warning');
+                const configArea = document.getElementById('config-area');
+
+                heading.innerText = 'Here is your very own timer';
+                intro.style.display = 'none';
+                form.style.display = 'none';
+
+                messageDiv.innerHTML = `
+                    <p>Your unique timer URL: <a href="${baseUrl}/timer.html?uuid=${data.uuid}" target="_blank">${baseUrl}/timer.html?uuid=${data.uuid}</a></p>
+                    <p>Use the following commands in NightBOT:</p>
+                    <p><b>!timer command:</b><br>
+                    <pre><code>\$(eval const rawResponse = \`$(urlfetch json ${baseUrl}/api/\$(query))\`; try { const response = JSON.parse(rawResponse); response.message ? 'Done! [5s cooldown, 30s for mega add]' : 'Unexpected response'; } catch (e) { \`Error parsing JSON. Raw response: \${rawResponse}\`; })</code></pre></p>
+                    <p><b>!at (add time) command:</b><br>
+                    <pre><code>Add an alias "!timer add?t=30" to add 30 seconds to the timer</code></pre></p>
+                `;
+                messageDiv.classList.remove('hidden');
+                warningDiv.classList.remove('hidden');
+                configArea.classList.remove('hidden');
+            });
+        });
+
+        function updateConfig() {
+            const defaultTime = document.getElementById('defaultTime').value;
+            fetch(`${baseUrl}/api/update_config/${timerUuid}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ default_time: defaultTime })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Configuration updated!');
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Reset the page to the initial state upon refresh
+        window.onload = function() {
+            const heading = document.getElementById('heading');
+            const intro = document.getElementById('intro');
+            const form = document.getElementById('registerForm');
+            const messageDiv = document.getElementById('message');
+            const warningDiv = document.getElementById('warning');
+            const configArea = document.getElementById('config-area');
+
+            heading.innerText = 'Register for Custom Timers';
+            intro.style.display = 'block';
+            form.style.display = 'flex';
+            messageDiv.classList.add('hidden');
+            warningDiv.classList.add('hidden');
+            configArea.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>

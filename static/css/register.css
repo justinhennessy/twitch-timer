@@ -51,127 +51,13 @@ input[type="submit"]:hover {
     transform: translateY(-2px);
 }
 
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 20px;
-    width: 100%;
-    max-width: 600px;
-}
-
-.config-area {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 400px;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-
-.config-area:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
-}
-
-.config-area h2 {
-    margin-top: 0;
-    font-size: 1.5em;
-    color: #333;
-}
-
-.config-area label {
-    display: block;
-    margin-bottom: 10px;
-    font-weight: bold;
-}
-
-.config-area input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    margin-bottom: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-    transition: border-color 0.3s;
-}
-
-.config-area input[type="number"]:focus {
-    border-color: #28a745;
-    outline: none;
-}
-
-.config-area button {
-    padding: 10px 15px;
-    font-size: 16px;
-    background-color: #28a745;
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s, transform 0.3s;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.config-area button:hover {
-    background-color: #218838;
-    transform: translateY(-2px);
-}
-
-.message, .warning {
-    margin-top: 20px;
-    padding: 10px;
-    text-align: left;
-    max-width: 600px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.message {
-    background-color: #e0ffe0;
-    border: 1px solid #00a000;
-    color: #006000;
-}
-
-.warning {
-    background-color: #ffe0e0;
-    border: 1px solid #a00000;
-    color: #600000;
-    text-align: center;
-}
-
 .hidden {
     display: none;
-}
-
-pre {
-    background-color: #f8f8f8;
-    padding: 10px;
-    border: 1px solid #ddd;
-    overflow-x: auto;
-    white-space: pre-wrap;  /* Wrap the code */
-    word-wrap: break-word;  /* Wrap long words */
-}
-
-code {
-    font-family: monospace;
 }
 
 /* Responsive styles */
 @media (max-width: 600px) {
     form {
         padding: 15px;
-    }
-
-    .config-area {
-        max-width: 100%;
-    }
-
-    pre {
-        font-size: 0.9em;
     }
 }
