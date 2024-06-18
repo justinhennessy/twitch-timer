@@ -14,7 +14,7 @@ class TimerManager:
         self._ensure_file_exists()
 
     def _track_s3_call(self, call_type):
-        from backend import track_s3_call
+        from backend_functions import track_s3_call
         track_s3_call(call_type)
 
     def _ensure_file_exists(self):
