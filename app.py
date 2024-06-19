@@ -1,9 +1,11 @@
 from flask import Flask
+from flask_cors import CORS
 from routes import routes_bp
 from routes_api import api_bp
 import os
 
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.urandom(24)
 
 # Register Blueprints

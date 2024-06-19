@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Personal Timer</title>
+    <link rel="stylesheet" href="static/css/style.css">
+    <link rel="stylesheet" href="static/css/personal_timer.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="heading">Here is your very own timer</h1>
+        <div id="timerInfo" class="timer-info"></div>
+        <div id="config-area" class="config-area">
+            <h2>Configuration</h2>
+            <label for="defaultTime">Default Time (seconds):</label>
+            <input type="number" id="defaultTime" value="300">
+            <button onclick="updateConfig()">Update</button>
+        </div>
+        <div class="warning-container">
+            <div class="warning" id="warning">Do not share your unique URL with anyone.</div>
+        </div>
+        <div>
+            <a id="docsLink" class="docs-link" href="#" target="_blank">Documentation</a>
+        </div>
+    </div>
+
+    <script src="static/js/personal_timer.js"></script>
+</body>
+</html>

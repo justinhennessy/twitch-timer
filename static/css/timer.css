@@ -1,7 +1,18 @@
 /* Timer Display Styles */
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: white;
+}
+
 #timerDisplay {
     font-family: 'Outfit', sans-serif;
     font-size: 9em;
+    text-align: center;
 }
 
 .image-container {

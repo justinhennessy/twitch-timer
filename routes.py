@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, session, send_from_directory, request
+from flask import Blueprint, redirect, url_for, session, send_from_directory, request, Flask, render_template
 from auth import OAuthConfig, GoogleAuthService, AuthFlowManager
 import os
 import requests
@@ -68,7 +68,8 @@ def serve_register_page():
 
 @routes_bp.route('/personal_timer.html')
 def serve_personal_timer_page():
-    return send_from_directory('static', 'personal_timer.html')
+    uuid = request.args.get('uuid')
+    return render_template('personal_timer.html', uuid=uuid)
 
 @routes_bp.route('/timer.html')
 def serve_timer_html():
@@ -81,4 +82,9 @@ def serve_admin_html():
 @routes_bp.route('/favicon.ico')
 def serve_favicon():
     return send_from_directory('static', 'favicon.ico')
+
+@routes_bp.route('/documentation.html')
+def serve_documentation():
+    uuid = request.args.get('uuid')
+    return render_template('documentation.html', uuid=uuid)
 
