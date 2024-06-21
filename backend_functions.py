@@ -10,6 +10,7 @@ from timer_manager import TimerManager
 load_dotenv()
 
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 bucket_name = os.getenv('BUCKET_NAME')
 aws_profile = 'twitch-timer'
@@ -56,12 +57,32 @@ logging.debug(f"email_to_uuid structure: {email_to_uuid}")
 # Initialize timers from email_to_uuid mapping
 for email, data in email_to_uuid.items():
     logging.debug(f"Initializing timer for email: {email}, data: {data}")
-    timers[data['uuid']] = TimerManager(bucket_name, data['uuid'], aws_profile)
+    timers[data['uuid']] = TimerManager(uuid=data['uuid'])
 
 def update_last_viewed(uuid):
-    email_to_uuid = read_email_to_uuid_from_s3()
+    try:
+        email_to_uuid = read_email_to_uuid_from_s3()
+        for email, data in email_to_uuid.items():
+            if data['uuid'] == uuid:
+                data['last_viewed'] = datetime.now().isoformat()
+                email_to_uuid[email] = data
+                write_email_to_uuid_to_s3(email_to_uuid)
+                return
+    except Exception as e:
+        print(f"Error updating last viewed for timer {uuid}: {e}")
+
+def load_existing_timers():
+    email_to_uuid = read_email_to_uuid_mapping()
     for email, data in email_to_uuid.items():
-        if data['uuid'] == uuid:
-            email_to_uuid[email]['last_viewed'] = datetime.now().isoformat()
-            break
-    write_email_to_uuid_to_s3(email_to_uuid)
+        uuid = data['uuid']
+        timers[uuid] = TimerManager(uuid=uuid)
+    logger.info("Loaded existing timers into the timers dictionary.")
+
+def read_email_to_uuid_mapping():
+    try:
+        response = s3_client.get_object(Bucket=bucket_name, Key='email_to_uuid.txt')
+        email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
+        return email_to_uuid
+    except Exception as e:
+        logger.error(f"Error reading email to UUID mapping from S3: {e}")
+        return {}
