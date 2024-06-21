@@ -1,4 +1,5 @@
 import redis
+import sys
 
 class RedisTimerUtility:
     def __init__(self, redis_host='localhost', redis_port=6379, redis_db=1):
@@ -55,8 +56,21 @@ class RedisTimerUtility:
             for call_type, count in counts.items():
                 print(f"  {call_type}: {count}")
 
+    def delete_timer(self, uuid):
+        self.redis_client.delete(uuid)
+        self.redis_client.delete(f"call_counts:{uuid}")
+        print(f"Deleted timer UUID: {uuid}")
+
 if __name__ == "__main__":
     utility = RedisTimerUtility()
 
-    # Dump all Redis info
-    utility.dump_all_info()
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+        if command == 'delete' and len(sys.argv) == 3:
+            timer_uuid = sys.argv[2]
+            utility.delete_timer(timer_uuid)
+        else:
+            print("Usage: python script.py delete <UUID>")
+    else:
+        # Dump all Redis info
+        utility.dump_all_info()
