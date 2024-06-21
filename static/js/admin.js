@@ -6,30 +6,39 @@ function fetchTimers() {
         .then(data => {
             const timersBody = document.getElementById('timersBody');
             timersBody.innerHTML = '';
-            data.timers.forEach(timer => {
-                const row = document.createElement('tr');
-                row.classList.add(timer.is_active ? 'active' : 'inactive');
-                row.innerHTML = `
-                    <td>${timer.email}</td>
-                    <td><a href="/timer.html?uuid=${timer.uuid}" target="_blank">${timer.uuid}</a></td>
-                    <td>${timer.last_viewed || 'Never'}</td>
-                    <td class="status" data-uuid="${timer.uuid}">${timer.is_active ? 'Active' : 'Inactive'}</td>
-                    <td id="getCount-${timer.uuid}">${timer.get_count}</td>
-                    <td id="setCount-${timer.uuid}">${timer.set_count}</td>
-                    <td>
-                        <i class="fas fa-play" onclick="startTimer('${timer.uuid}')" title="Start Timer"></i>
-                        <i class="fas fa-redo" onclick="resetTimer('${timer.uuid}')" title="Reset Timer"></i>
-                        <i class="fas fa-trash-alt" onclick="deleteTimer('${timer.uuid}')" title="Delete Timer"></i>
-                    </td>
-                `;
-                timersBody.appendChild(row);
-            });
 
-            // Add hover event listeners
-            document.querySelectorAll('.status').forEach(statusCell => {
-                statusCell.addEventListener('mouseenter', showTooltip);
-                statusCell.addEventListener('mouseleave', hideTooltip);
-            });
+            if (data.timers.length === 0) {
+                const noTimersMessage = document.createElement('tr');
+                noTimersMessage.innerHTML = `
+                    <td colspan="7" style="text-align: center;">There are currently no timers on the platform</td>
+                `;
+                timersBody.appendChild(noTimersMessage);
+            } else {
+                data.timers.forEach(timer => {
+                    const row = document.createElement('tr');
+                    row.classList.add(timer.is_active ? 'active' : 'inactive');
+                    row.innerHTML = `
+                        <td>${timer.email}</td>
+                        <td><a href="/timer.html?uuid=${timer.uuid}" target="_blank">${timer.uuid}</a></td>
+                        <td>${timer.last_viewed || 'Never'}</td>
+                        <td class="status" data-uuid="${timer.uuid}">${timer.is_active ? 'Active' : 'Inactive'}</td>
+                        <td id="getCount-${timer.uuid}">${timer.get_count}</td>
+                        <td id="setCount-${timer.uuid}">${timer.set_count}</td>
+                        <td>
+                            <i class="fas fa-play" onclick="startTimer('${timer.uuid}')" title="Start Timer"></i>
+                            <i class="fas fa-redo" onclick="resetTimer('${timer.uuid}')" title="Reset Timer"></i>
+                            <i class="fas fa-trash-alt" onclick="deleteTimer('${timer.uuid}')" title="Delete Timer"></i>
+                        </td>
+                    `;
+                    timersBody.appendChild(row);
+                });
+
+                // Add hover event listeners
+                document.querySelectorAll('.status').forEach(statusCell => {
+                    statusCell.addEventListener('mouseenter', showTooltip);
+                    statusCell.addEventListener('mouseleave', hideTooltip);
+                });
+            }
         });
 }
 
