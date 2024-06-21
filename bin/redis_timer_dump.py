@@ -5,14 +5,17 @@ class RedisTimerUtility:
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
 
     def list_all_timers(self):
-        timers = self.redis_client.keys()
+        timers = self.redis_client.keys('*')
         timer_data = {}
 
         for timer in timers:
             if timer.startswith(b'call_counts:'):
                 continue
             time_value = self.redis_client.get(timer)
-            timer_data[timer.decode('utf-8')] = int(time_value)
+            try:
+                timer_data[timer.decode('utf-8')] = float(time_value)
+            except ValueError:
+                timer_data[timer.decode('utf-8')] = time_value.decode('utf-8')
 
         return timer_data
 
@@ -21,7 +24,7 @@ class RedisTimerUtility:
 
         if not call_counts:
             print(f"No call counts found for timer UUID: {timer_uuid}")
-            return
+            return {}
 
         call_counts = {k.decode('utf-8'): int(v) for k, v in call_counts.items()}
         return call_counts
@@ -38,27 +41,22 @@ class RedisTimerUtility:
 
         return all_call_counts
 
+    def dump_all_info(self):
+        all_timers = self.list_all_timers()
+        all_call_counts = self.list_all_call_counts()
+
+        print("Timers and their remaining times:")
+        for uuid, time in all_timers.items():
+            print(f"UUID: {uuid}, Remaining Time: {time}")
+
+        print("\nCall counts for all timers:")
+        for uuid, counts in all_call_counts.items():
+            print(f"UUID: {uuid}")
+            for call_type, count in counts.items():
+                print(f"  {call_type}: {count}")
+
 if __name__ == "__main__":
     utility = RedisTimerUtility()
 
-    # List all timers
-    timers = utility.list_all_timers()
-    print("Timers and their remaining times:")
-    for uuid, time in timers.items():
-        print(f"UUID: {uuid}, Remaining Time: {time}")
-
-    # List call counts for a specific timer
-    timer_uuid = '317bbf49-74a9-4de5-b855-c7efe511db89'  # Replace with the actual UUID
-    counts = utility.list_call_counts(timer_uuid)
-    if counts:
-        print(f"Call counts for timer UUID: {timer_uuid}")
-        for call_type, count in counts.items():
-            print(f"{call_type}: {count}")
-
-    # List call counts for all timers
-    all_counts = utility.list_all_call_counts()
-    print("Call counts for all timers:")
-    for uuid, counts in all_counts.items():
-        print(f"UUID: {uuid}")
-        for call_type, count in counts.items():
-            print(f"  {call_type}: {count}")
+    # Dump all Redis info
+    utility.dump_all_info()
