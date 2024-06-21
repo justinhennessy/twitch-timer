@@ -3,8 +3,12 @@ import json
 import redis
 import boto3
 from datetime import datetime, timedelta
+import logging
 
 redis_client = redis.Redis(host='localhost', port=6379, db=1)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('count_down')
 
 # Initialize S3 client
 aws_profile = 'twitch-timer'
@@ -22,7 +26,7 @@ def read_time(uuid):
         track_redis_call("GET", uuid)
         return float(time_value) if time_value else 0.0
     except redis.RedisError as e:
-        print(f"Error reading key from Redis for {uuid}: {e}")
+        logger.error(f"Error reading key from Redis for {uuid}: {e}")
         return 0.0
 
 def write_time(uuid, time_value):
@@ -30,7 +34,7 @@ def write_time(uuid, time_value):
         redis_client.set(uuid, time_value)
         track_redis_call("SET", uuid)
     except redis.RedisError as e:
-        print(f"Error writing key to Redis for {uuid}: {e}")
+        logger.error(f"Error writing key to Redis for {uuid}: {e}")
 
 def read_email_to_uuid_mapping():
     try:
@@ -38,7 +42,7 @@ def read_email_to_uuid_mapping():
         email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
         return email_to_uuid
     except Exception as e:
-        print(f"Error reading email to UUID mapping from S3: {e}")
+        logger.error(f"Error reading email to UUID mapping from S3: {e}")
         return {}
 
 def countdown_timer():
@@ -55,9 +59,9 @@ def countdown_timer():
                         new_time_value = max(time_value - 1, 0)
                         write_time(uuid, new_time_value)
                 except redis.RedisError as e:
-                    print(f"Error updating timer {uuid}: {e}")
+                    logger.error(f"Error updating timer {uuid}: {e}")
             else:
-                print(f"Timer {uuid} not active or not viewed recently")
+                logger.debug(f"Timer {uuid} not active or not viewed recently")
 
         time.sleep(1)  # Sleep for 1 second
 
