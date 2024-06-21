@@ -7,7 +7,7 @@ import json
 import boto3
 import os
 from timer_manager import TimerManager
-from backend_functions import update_last_viewed, read_email_to_uuid_mapping, write_email_to_uuid_to_s3, load_existing_timers, timers
+from backend_functions import update_last_viewed, read_email_to_uuid_mapping, write_email_to_uuid_to_s3, load_existing_timers, timers, s3_call_counts
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -223,8 +223,10 @@ def timers_status():
 def get_s3_call_counts():
     logger.info("S3 call counts requested")
     return jsonify({
-        "GET": int(redis_client.hget("call_counts", "GET") or 0),
-        "SET": int(redis_client.hget("call_counts", "SET") or 0)
+        "GET": s3_call_counts["GET"],
+        "PUT": s3_call_counts["PUT"],
+        "email_get": s3_call_counts["email_get"],
+        "email_put": s3_call_counts["email_put"]
     })
 
 @api_bp.route("/api/track_redis_call", methods=['POST'])
