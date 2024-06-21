@@ -1,14 +1,29 @@
 /* Admin Page Specific Styles */
-table {
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 20px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h1, h2 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#timersTable, #redisCountsTable {
     width: 100%;
-    max-width: 800px;
-    border-collapse: collapse;
     margin: 20px 0;
+    border-collapse: collapse;
     background-color: #fff;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-table, th, td {
+#timersTable, #redisCountsTable, th, td {
     border: 1px solid #ddd;
 }
 
@@ -39,4 +54,37 @@ tr.inactive {
 
 .fa-play:hover, .fa-redo:hover {
     color: #007bff;
+}
+
+/* Tooltip Styles */
+.tooltip {
+    display: none;
+    position: absolute;
+    background-color: #333;
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 1000;
+}
+
+/* Responsive styles */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    h1, h2 {
+        font-size: 1.5em;
+        text-align: center;
+    }
+
+    table, th, td {
+        font-size: 0.9em;
+    }
+
+    .container {
+        flex-direction: column;
+        align-items: center;
+    }
 }

@@ -7,7 +7,7 @@ import json
 import boto3
 import os
 from timer_manager import TimerManager
-from backend_functions import update_last_viewed, read_email_to_uuid_mapping, load_existing_timers, timers
+from backend_functions import update_last_viewed, read_email_to_uuid_mapping, write_email_to_uuid_to_s3, load_existing_timers, timers
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,6 +39,28 @@ def create_timer():
     timers[new_uuid] = TimerManager(uuid=new_uuid)
     logger.info(f"Created new timer with UUID: {new_uuid}")
     return jsonify({"uuid": new_uuid})
+
+@api_bp.route("/api/delete/<uuid>", methods=['DELETE'])
+def delete_timer(uuid):
+    try:
+        # Remove from Redis
+        redis_client.delete(uuid)
+        redis_client.delete(f"call_counts:{uuid}")
+
+        # Remove from the email_to_uuid mapping
+        email_to_uuid = read_email_to_uuid_mapping()
+        email_to_uuid = {email: data for email, data in email_to_uuid.items() if data['uuid'] != uuid}
+        write_email_to_uuid_to_s3(email_to_uuid)
+
+        # Remove from the timers dictionary
+        if uuid in timers:
+            del timers[uuid]
+
+        logger.info(f"Deleted timer UUID: {uuid}")
+        return jsonify({"status": "success", "message": f"Timer {uuid} deleted successfully"})
+    except Exception as e:
+        logger.error(f"Error deleting timer {uuid}: {e}")
+        return jsonify({"status": "error", "message": f"Failed to delete timer {uuid}"}), 500
 
 @api_bp.route("/api/timer/<uuid>", methods=['GET'])
 def get_timer(uuid):
@@ -167,20 +189,30 @@ def get_base_url():
     logger.info("Base URL requested")
     return jsonify({"base_url": base_url})
 
+from datetime import datetime, timedelta
+
 @api_bp.route("/api/timers_status", methods=['GET'])
 def timers_status():
     email_to_uuid = read_email_to_uuid_mapping()
     timer_status = []
     for email, data in email_to_uuid.items():
         uuid = data['uuid']
-        last_modified = redis_client.ttl(uuid)
-        is_active = (datetime.now() - datetime.fromtimestamp(last_modified)) < timedelta(minutes=1)
+        last_viewed = data.get('last_viewed')
+
+        if last_viewed is not None:
+            # Assuming the last_viewed string is in ISO format
+            last_viewed_datetime = datetime.fromisoformat(last_viewed)
+            is_active = (datetime.now() - last_viewed_datetime) < timedelta(minutes=1)
+        else:
+            last_viewed_datetime = None
+            is_active = False
+
+        logger.debug(f"Timer UUID: {uuid}, Last viewed: {last_viewed}")
         timer_status.append({
             "uuid": uuid,
             "email": email,
             "is_active": is_active,
-            "last_modified": datetime.fromtimestamp(last_modified).isoformat(),
-            "last_viewed": data.get('last_viewed'),
+            "last_viewed": last_viewed,
             "get_count": int(redis_client.hget(f"call_counts:{uuid}", "GET") or 0),
             "set_count": int(redis_client.hget(f"call_counts:{uuid}", "SET") or 0)
         })

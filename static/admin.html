@@ -9,162 +9,51 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
-    <h1>Admin - Timer Management</h1>
-    <table id="timersTable" class="table">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>UUID</th>
-                <th>Timer Updated</th>
-                <th>Last Viewed</th>
-                <th>Status</th>
-                <th>GET Count</th>
-                <th>PUT Count</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody id="timersBody">
-            <!-- Timer rows will be added here dynamically -->
-        </tbody>
-    </table>
-    <h2>S3 Call Counts</h2>
-    <table id="s3CountsTable" class="table">
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>GET</td>
-                <td id="getCount">0</td>
-            </tr>
-            <tr>
-                <td>PUT</td>
-                <td id="putCount">0</td>
-            </tr>
-        </tbody>
-    </table>
-    <h2>DB Store S3 Call Counts</h2>
-    <table id="emailToUuidS3CountsTable" class="table">
-        <thead>
-            <tr>
-                <th>Type</th>
-                <th>Count</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>GET</td>
-                <td id="emailGetCount">0</td>
-            </tr>
-            <tr>
-                <td>PUT</td>
-                <td id="emailPutCount">0</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container">
+        <h1>Admin - Timer Management</h1>
+
+        <h2>Timers</h2>
+        <table id="timersTable" class="table">
+            <thead>
+                <tr>
+                    <th>Email</th>
+                    <th>UUID</th>
+                    <th>Last Viewed</th>
+                    <th>Status</th>
+                    <th>GET Count</th>
+                    <th>SET Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="timersBody">
+                <!-- Timer rows will be added here dynamically -->
+            </tbody>
+        </table>
+
+        <h2>Redis Call Counts</h2>
+        <table id="redisCountsTable" class="table">
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>GET</td>
+                    <td id="getCount">0</td>
+                </tr>
+                <tr>
+                    <td>SET</td>
+                    <td id="setCount">0</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <!-- Tooltip -->
     <div id="tooltip" class="tooltip"></div>
 
-    <script>
-        const baseUrl = '/api';
-
-        function fetchTimers() {
-            fetch(`${baseUrl}/timers_status`)
-                .then(response => response.json())
-                .then(data => {
-                    const timersBody = document.getElementById('timersBody');
-                    timersBody.innerHTML = '';
-                    data.timers.forEach(timer => {
-                        const row = document.createElement('tr');
-                        row.classList.add(timer.is_active ? 'active' : 'inactive');
-                        row.innerHTML = `
-                            <td>${timer.email}</td>
-                            <td><a href="/timer.html?uuid=${timer.uuid}" target="_blank">${timer.uuid}</a></td>
-                            <td>${timer.last_modified}</td>
-                            <td>${timer.last_viewed || 'Never'}</td>
-                            <td class="status" data-uuid="${timer.uuid}">${timer.is_active ? 'Active' : 'Inactive'}</td>
-                            <td id="getCount-${timer.uuid}">${timer.get_count}</td>
-                            <td id="putCount-${timer.uuid}">${timer.put_count}</td>
-                            <td>
-                                <i class="fas fa-play" onclick="startTimer('${timer.uuid}')" title="Start Timer"></i>
-                                <i class="fas fa-redo" onclick="resetTimer('${timer.uuid}')" title="Reset Timer"></i>
-                            </td>
-                        `;
-                        timersBody.appendChild(row);
-                    });
-
-                    // Add hover event listeners
-                    document.querySelectorAll('.status').forEach(statusCell => {
-                        statusCell.addEventListener('mouseenter', showTooltip);
-                        statusCell.addEventListener('mouseleave', hideTooltip);
-                    });
-                });
-        }
-
-        function fetchS3CallCounts() {
-            fetch(`${baseUrl}/s3_call_counts`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('getCount').innerText = data.GET;
-                    document.getElementById('putCount').innerText = data.PUT;
-                    document.getElementById('emailGetCount').innerText = data.email_get;
-                    document.getElementById('emailPutCount').innerText = data.email_put;
-
-                    // Update GET and PUT counts for each timer
-                    data.timers.forEach(timer => {
-                        document.getElementById(`getCount-${timer.uuid}`).innerText = timer.get_count;
-                        document.getElementById(`putCount-${timer.uuid}`).innerText = timer.put_count;
-                    });
-                });
-        }
-
-        function startTimer(uuid) {
-            fetch(`${baseUrl}/start/${uuid}`)
-                .then(response => response.json())
-                .then(() => {
-                    fetchTimers();
-                });
-        }
-
-        function resetTimer(uuid) {
-            fetch(`${baseUrl}/reset/${uuid}`)
-                .then(response => response.json())
-                .then(() => {
-                    fetchTimers();
-                });
-        }
-
-        function showTooltip(event) {
-            const status = event.target.innerText;
-            if (status === 'Active') {
-                const uuid = event.target.getAttribute('data-uuid');
-                fetch(`${baseUrl}/timer/${uuid}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        const tooltip = document.getElementById('tooltip');
-                        tooltip.innerText = `Current Timer Value: ${data.timer}`;
-                        tooltip.style.display = 'block';
-                        tooltip.style.left = `${event.pageX + 10}px`;
-                        tooltip.style.top = `${event.pageY - 30}px`;  // Position above the cursor
-                    });
-            }
-        }
-
-        function hideTooltip() {
-            const tooltip = document.getElementById('tooltip');
-            tooltip.style.display = 'none';
-        }
-
-        document.addEventListener('DOMContentLoaded', (event) => {
-            fetchTimers();
-            fetchS3CallCounts();
-            setInterval(fetchTimers, 5000); // Update timer data every 5 seconds
-            setInterval(fetchS3CallCounts, 5000); // Update S3 call counts every 5 seconds
-        });
-    </script>
+    <script src="static/js/admin.js"></script>
 </body>
 </html>
