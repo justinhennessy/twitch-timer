@@ -9,7 +9,7 @@ import os
 from timer_manager import TimerManager
 from backend_functions import update_last_viewed, read_email_to_uuid_mapping, load_existing_timers, timers
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 api_bp = Blueprint('api', __name__)
@@ -184,7 +184,7 @@ def timers_status():
             "get_count": int(redis_client.hget(f"call_counts:{uuid}", "GET") or 0),
             "set_count": int(redis_client.hget(f"call_counts:{uuid}", "SET") or 0)
         })
-    logger.info(f"Timer status: {timer_status}")
+    logger.debug(f"Timer status: {timer_status}")
     return jsonify({"timers": timer_status})
 
 @api_bp.route("/api/s3_call_counts", methods=['GET'])
