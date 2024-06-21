@@ -1,43 +1,40 @@
 import threading
-import boto3
-import uuid
-from botocore.exceptions import NoCredentialsError, ClientError
+import redis
+import uuid as uuid_lib
 
 class TimerManager:
-    def __init__(self, bucket_name, uuid=None, aws_profile='twitch-timer', default_time=300):
+    def __init__(self, redis_host='localhost', redis_port=6379, redis_db=1, uuid=None, default_time=300):
         self.lock = threading.Lock()
-        self.bucket_name = bucket_name
-        self.session = boto3.Session(profile_name=aws_profile)
-        self.s3_client = self.session.client('s3')
-        self.file_key = uuid if uuid else str(uuid.uuid4())
+        self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
+        self.file_key = uuid if uuid else str(uuid_lib.uuid4())
         self.default_time = default_time
-        self._ensure_file_exists()
+        self._ensure_key_exists()
 
-    def _track_s3_call(self, call_type):
-        from backend_functions import track_s3_call
-        track_s3_call(call_type)
+    def __repr__(self):
+        return f"TimerManager(uuid={self.file_key}, default_time={self.default_time})"
 
-    def _ensure_file_exists(self):
-        try:
-            self.s3_client.head_object(Bucket=self.bucket_name, Key=self.file_key)
-        except ClientError:
-            self._write_time(0.0)
+    def _track_redis_call(self, call_type):
+        track_redis_call(call_type, self.file_key)
+
+    def _ensure_key_exists(self):
+        if not self.redis_client.exists(self.file_key):
+            self._write_time(0)
 
     def _read_time(self):
         try:
-            response = self.s3_client.get_object(Bucket=self.bucket_name, Key=self.file_key)
-            self._track_s3_call("GET")
-            return float(response['Body'].read().decode('utf-8'))
-        except (NoCredentialsError, ClientError) as e:
-            print(f"Error reading file from S3: {e}")
+            time_value = self.redis_client.get(self.file_key)
+            self._track_redis_call("GET")
+            return float(time_value) if time_value else 0.0
+        except redis.RedisError as e:
+            print(f"Error reading key from Redis: {e}")
             return 0.0
 
     def _write_time(self, time_value):
         try:
-            self.s3_client.put_object(Bucket=self.bucket_name, Key=self.file_key, Body=str(time_value))
-            self._track_s3_call("PUT")
-        except NoCredentialsError as e:
-            print(f"Error writing file to S3: {e}")
+            self.redis_client.set(self.file_key, time_value)
+            self._track_redis_call("SET")
+        except redis.RedisError as e:
+            print(f"Error writing key to Redis: {e}")
 
     def get_remaining_time(self):
         with self.lock:
@@ -65,3 +62,7 @@ class TimerManager:
     def start_time(self):
         with self.lock:
             self._write_time(self.default_time)
+
+def track_redis_call(call_type, timer_uuid):
+    redis_client = redis.Redis(host='localhost', port=6379, db=1)
+    redis_client.hincrby(f"call_counts:{timer_uuid}", call_type, 1)
