@@ -35,9 +35,14 @@ def read_email_to_uuid_from_redis():
         email_to_uuid = {}
         keys = redis_client.keys('email:*')
         for key in keys:
-            email = key.decode().split(':')[1]
+            email = key.decode().split(':', 1)[1]
             data = redis_client.hgetall(key)
             email_to_uuid[email] = {k.decode(): v.decode() for k, v in data.items()}
+            # Convert 'default_time' to int and handle 'last_viewed' conversion
+            email_to_uuid[email]['default_time'] = int(email_to_uuid[email]['default_time'])
+            last_viewed = email_to_uuid[email].get('last_viewed')
+            if last_viewed != 'None':
+                email_to_uuid[email]['last_viewed'] = last_viewed
         track_redis_call("email_get")
         return email_to_uuid
     except redis.RedisError as e:
@@ -48,8 +53,11 @@ def write_email_to_uuid_to_redis(email_to_uuid):
     try:
         for email, data in email_to_uuid.items():
             redis_key = f"email:{email}"
+            # Convert all values to strings for storage in Redis
+            data = {k: str(v) for k, v in data.items()}
             redis_client.hmset(redis_key, data)
         track_redis_call("email_put")
+        logger.info(f"Written to Redis: {email_to_uuid}")  # Debugging line
     except redis.RedisError as e:
         logger.error(f"Error writing email to UUID mapping to Redis: {e}")
 
@@ -83,5 +91,3 @@ def load_existing_timers():
         timers[uuid] = TimerManager(uuid=uuid)
     logger.info("Loaded existing timers into the timers dictionary.")
 
-def read_email_to_uuid_mapping():
-    return read_email_to_uuid_from_redis()
