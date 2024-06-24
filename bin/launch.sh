@@ -4,7 +4,7 @@
 commands=(
     "echo 'Counter service is starting ...'; python count_down.py"
     "echo 'ngrok is starting ...'; ngrok http 5001"
-    "echo 'Backend API starting ...'; python backend.py"
+    "echo 'Backend API starting ...'; python app.py"
 )
 
 # List of corresponding custom titles
