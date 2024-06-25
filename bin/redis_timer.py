@@ -10,8 +10,12 @@ class RedisTimerUtility:
         timer_data = {}
 
         for timer in timers:
+            key_type = self.redis_client.type(timer).decode('utf-8')  # Get the type of the key
+            if key_type != 'string':  # Proceed only if the key type is string
+                continue
             if timer.startswith(b'call_counts:'):
                 continue
+
             time_value = self.redis_client.get(timer)
             try:
                 timer_data[timer.decode('utf-8')] = float(time_value)
