@@ -1,20 +1,14 @@
 import time
-import json
 import redis
-import boto3
 from datetime import datetime, timedelta
 import logging
+from backend_functions import read_email_to_uuid_from_redis
 
+# Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, db=1)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('count_down')
-
-# Initialize S3 client
-aws_profile = 'twitch-timer'
-boto_session = boto3.Session(profile_name=aws_profile)
-s3_client = boto_session.client('s3')
-bucket_name = 'twitch-timer'  # Replace with your actual bucket name
 
 def track_redis_call(call_type, timer_uuid):
     # Increment call count in Redis
@@ -33,31 +27,27 @@ def write_time(uuid, time_value):
     try:
         redis_client.set(uuid, time_value)
         track_redis_call("SET", uuid)
+        logger.info(f"Updated timer {uuid}: {time_value}")  # Log for successful write
     except redis.RedisError as e:
         logger.error(f"Error writing key to Redis for {uuid}: {e}")
 
-def read_email_to_uuid_mapping():
-    try:
-        response = s3_client.get_object(Bucket=bucket_name, Key='email_to_uuid.txt')
-        email_to_uuid = json.loads(response['Body'].read().decode('utf-8'))
-        return email_to_uuid
-    except Exception as e:
-        logger.error(f"Error reading email to UUID mapping from S3: {e}")
-        return {}
-
 def countdown_timer():
     while True:
-        email_to_uuid = read_email_to_uuid_mapping()
+        email_to_uuid = read_email_to_uuid_from_redis()  # Use the imported function
 
         for email, data in email_to_uuid.items():
             uuid = data['uuid']
             last_viewed = data.get('last_viewed')
-            if last_viewed and (datetime.now() - datetime.fromisoformat(last_viewed)) < timedelta(seconds=10):
+            if last_viewed:
                 try:
-                    time_value = read_time(uuid)
-                    if time_value not in [-1, -999]:
-                        new_time_value = max(time_value - 1, 0)
-                        write_time(uuid, new_time_value)
+                    last_viewed_datetime = datetime.fromisoformat(last_viewed)
+                    if (datetime.now() - last_viewed_datetime) < timedelta(seconds=10):
+                        time_value = read_time(uuid)
+                        if time_value not in [-1, -999]:
+                            new_time_value = max(time_value - 1, 0)
+                            write_time(uuid, new_time_value)
+                except ValueError as ve:
+                    logger.error(f"Error parsing datetime for {uuid}: {ve}")
                 except redis.RedisError as e:
                     logger.error(f"Error updating timer {uuid}: {e}")
             else:
