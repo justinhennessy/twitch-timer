@@ -42,17 +42,6 @@ function fetchTimers() {
         });
 }
 
-function fetchS3CallCounts() {
-    fetch(`${baseUrl}/s3_call_counts`)
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('getCount').innerText = data.GET || 0;
-            document.getElementById('setCount').innerText = data.PUT || 0;
-            document.getElementById('emailGetCount').innerText = data.email_get || 0;
-            document.getElementById('emailPutCount').innerText = data.email_put || 0;
-        });
-}
-
 function startTimer(uuid) {
     fetch(`${baseUrl}/start/${uuid}`)
         .then(response => response.json())
@@ -75,7 +64,7 @@ function deleteTimer(uuid) {
             .then(response => response.json())
             .then(() => {
                 fetchTimers();
-                fetchS3CallCounts(); // Fetch updated S3 call counts after deleting a timer
+                fetchRedisCallCounts(); // Fetch updated Redis call counts after deleting a timer
             });
     }
 }
@@ -103,7 +92,7 @@ function hideTooltip() {
 
 document.addEventListener('DOMContentLoaded', (event) => {
     fetchTimers();
-    fetchS3CallCounts();
+    fetchRedisCallCounts();
     setInterval(fetchTimers, 5000); // Update timer data every 5 seconds
-    setInterval(fetchS3CallCounts, 5000); // Update S3 call counts every 5 seconds
+    setInterval(fetchRedisCallCounts, 5000); // Update Redis call counts every 5 seconds
 });
