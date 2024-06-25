@@ -4,10 +4,9 @@ import uuid as uuid_lib
 from datetime import datetime, timedelta
 import redis
 import json
-import boto3
 import os
 from timer_manager import TimerManager
-from backend_functions import update_last_viewed, read_email_to_uuid_mapping, write_email_to_uuid_to_s3, load_existing_timers, timers, s3_call_counts
+from backend_functions import update_last_viewed, read_email_to_uuid_from_redis, write_email_to_uuid_to_redis, load_existing_timers, timers, redis_call_counts
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,21 +16,10 @@ api_bp = Blueprint('api', __name__)
 # Initialize Redis client
 redis_client = redis.Redis(host='localhost', port=6379, db=1)
 
-# Initialize S3 client
-aws_profile = 'twitch-timer'
-boto_session = boto3.Session(profile_name=aws_profile)
-s3_client = boto_session.client('s3')
-bucket_name = os.getenv('BUCKET_NAME')
-base_url=os.getenv('BASE_URL')
+base_url = os.getenv('BASE_URL')
 
 def track_redis_call(call_type, timer_uuid):
     redis_client.hincrby(f"call_counts:{timer_uuid}", call_type, 1)
-
-def write_email_to_uuid_mapping(email_to_uuid):
-    try:
-        s3_client.put_object(Bucket=bucket_name, Key='email_to_uuid.txt', Body=json.dumps(email_to_uuid))
-    except Exception as e:
-        logger.error(f"Error writing email to UUID mapping to S3: {e}")
 
 @api_bp.route("/api/create", methods=['POST'])
 def create_timer():
@@ -50,7 +38,7 @@ def delete_timer(uuid):
         # Remove from the email_to_uuid mapping
         email_to_uuid = read_email_to_uuid_mapping()
         email_to_uuid = {email: data for email, data in email_to_uuid.items() if data['uuid'] != uuid}
-        write_email_to_uuid_to_s3(email_to_uuid)
+        write_email_to_uuid_to_redis(email_to_uuid)
 
         # Remove from the timers dictionary
         if uuid in timers:
@@ -123,7 +111,7 @@ def reset_time(uuid):
 def start_time(uuid):
     timer_manager = timers.get(uuid)
     if timer_manager:
-        email_to_uuid = read_email_to_uuid_mapping()
+        email_to_uuid = read_email_to_uuid_from_redis()
         for email, data in email_to_uuid.items():
             if data['uuid'] == uuid:
                 default_time = data.get('default_time', 300)
@@ -139,7 +127,7 @@ def start_time(uuid):
 
 @api_bp.route("/api/timers", methods=['GET'])
 def list_timers():
-    email_to_uuid = read_email_to_uuid_mapping()
+    email_to_uuid = read_email_to_uuid_from_redis()
     active_timers = [data['uuid'] for data in email_to_uuid.values()]
     logger.info(f"List of active timers: {active_timers}")
     return jsonify({"active_timers": active_timers})
@@ -152,11 +140,11 @@ def update_config(uuid):
     if default_time is None:
         return jsonify({"error": "default_time is required"}), 400
 
-    email_to_uuid = read_email_to_uuid_mapping()
+    email_to_uuid = read_email_to_uuid_from_redis()
     for email, details in email_to_uuid.items():
         if details['uuid'] == uuid:
             details['default_time'] = default_time
-            write_email_to_uuid_mapping(email_to_uuid)
+            write_email_to_uuid_to_redis(email_to_uuid)
             timers[uuid].default_time = default_time
             track_redis_call("SET", uuid)
             logger.info(f"Updated default time for timer with UUID {uuid} to {default_time} seconds")
@@ -168,7 +156,7 @@ def update_config(uuid):
 def register():
     data = request.get_json()
     email = data['email']
-    email_to_uuid = read_email_to_uuid_mapping()
+    email_to_uuid = read_email_to_uuid_from_redis()
     if email in email_to_uuid:
         user_uuid = email_to_uuid[email]['uuid']
         logger.info(f"Email {email} already registered with UUID: {user_uuid}")
@@ -180,54 +168,42 @@ def register():
             "default_time": 300  # Default to 300 seconds
         }
         timers[user_uuid] = TimerManager(uuid=user_uuid)
-        write_email_to_uuid_mapping(email_to_uuid)
+        logger.info(f"Before writing to Redis: {email_to_uuid}")  # Debugging line
+        write_email_to_uuid_to_redis(email_to_uuid)  # Ensure this is being called correctly
         logger.info(f"Registered new email {email} with UUID: {user_uuid}")
     return jsonify({"uuid": user_uuid})
+
 
 @api_bp.route("/api/base_url", methods=['GET'])
 def get_base_url():
     logger.info("Base URL requested")
     return jsonify({"base_url": base_url})
 
-from datetime import datetime, timedelta
-
 @api_bp.route("/api/timers_status", methods=['GET'])
 def timers_status():
-    email_to_uuid = read_email_to_uuid_mapping()
+    email_to_uuid = read_email_to_uuid_from_redis()
     timer_status = []
     for email, data in email_to_uuid.items():
         uuid = data['uuid']
         last_viewed = data.get('last_viewed')
-
-        if last_viewed is not None:
-            # Assuming the last_viewed string is in ISO format
-            last_viewed_datetime = datetime.fromisoformat(last_viewed)
-            is_active = (datetime.now() - last_viewed_datetime) < timedelta(minutes=1)
+        if last_viewed:
+            try:
+                last_viewed_datetime = datetime.fromisoformat(last_viewed)
+                is_active = (datetime.now() - last_viewed_datetime) < timedelta(minutes=1)
+            except ValueError:
+                print(f"Invalid ISO format for timer {uuid}: {last_viewed}")
+                is_active = False
         else:
-            last_viewed_datetime = None
             is_active = False
-
-        logger.debug(f"Timer UUID: {uuid}, Last viewed: {last_viewed}")
+        
         timer_status.append({
             "uuid": uuid,
             "email": email,
             "is_active": is_active,
-            "last_viewed": last_viewed,
-            "get_count": int(redis_client.hget(f"call_counts:{uuid}", "GET") or 0),
-            "set_count": int(redis_client.hget(f"call_counts:{uuid}", "SET") or 0)
+            "last_modified": last_viewed,  # Keep original string for debugging
+            "last_viewed": last_viewed
         })
-    logger.debug(f"Timer status: {timer_status}")
     return jsonify({"timers": timer_status})
-
-@api_bp.route("/api/s3_call_counts", methods=['GET'])
-def get_s3_call_counts():
-    logger.info("S3 call counts requested")
-    return jsonify({
-        "GET": s3_call_counts["GET"],
-        "PUT": s3_call_counts["PUT"],
-        "email_get": s3_call_counts["email_get"],
-        "email_put": s3_call_counts["email_put"]
-    })
 
 @api_bp.route("/api/track_redis_call", methods=['POST'])
 def api_track_redis_call():
@@ -256,5 +232,3 @@ def create_app():
 if __name__ == "__main__":
     app = create_app()
     app.run(debug=True)
-
-
