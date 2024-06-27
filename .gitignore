@@ -5,3 +5,4 @@ timer.txt
 .env
 client_secrets.json
 token.json
+data/

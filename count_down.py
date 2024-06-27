@@ -27,7 +27,7 @@ def write_time(uuid, time_value):
     try:
         redis_client.set(uuid, time_value)
         track_redis_call("SET", uuid)
-        logger.info(f"Updated timer {uuid}: {time_value}")  # Log for successful write
+        logger.debug(f"Updated timer {uuid}: {time_value}")  # Log for successful write
     except redis.RedisError as e:
         logger.error(f"Error writing key to Redis for {uuid}: {e}")
 

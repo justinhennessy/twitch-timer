@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="static/css/style.css">
     <link rel="stylesheet" href="static/css/admin.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Load Chart.js -->
 </head>
 <body>
     <div class="container">
@@ -50,16 +51,13 @@
                         <td>SET</td>
                         <td id="setCount">0</td>
                     </tr>
-                    <tr>
-                        <td>Email GET</td>
-                        <td id="emailGetCount">0</td>
-                    </tr>
-                    <tr>
-                        <td>Email PUT</td>
-                        <td id="emailPutCount">0</td>
-                    </tr>
                 </tbody>
             </table>
+        </div>
+
+        <h2>Operation Chart</h2>
+        <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+            <canvas id="redisOperationChart"></canvas>
         </div>
     </div>
 

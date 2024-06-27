@@ -18,17 +18,22 @@ redis_client = redis.Redis(host='localhost', port=6379, db=1)
 timers = {}
 
 # Track Redis GET and PUT calls
-redis_call_counts = {"GET": 0, "PUT": 0, "email_get": 0, "email_put": 0}
-timer_call_counts = {}
+redis_operations = {}
+# timer_call_counts = {}
 
-def track_redis_call(call_type, timer_uuid=None):
-    if call_type in redis_call_counts:
-        redis_call_counts[call_type] += 1
-    if timer_uuid:
-        if timer_uuid not in timer_call_counts:
-            timer_call_counts[timer_uuid] = {"GET": 0, "PUT": 0}
-        if call_type in timer_call_counts[timer_uuid]:
-            timer_call_counts[timer_uuid][call_type] += 1
+def track_redis_call(call_type, timer_uuid=None, reason=""):
+    key = f"{call_type}:{timer_uuid}:{reason}"
+    if key in redis_operations:
+        redis_operations[key] += 1
+    else:
+        redis_operations[key] = 1
+
+    # Also update aggregate counts
+    aggregate_key = f"{call_type}:{reason}"
+    if aggregate_key in redis_operations:
+        redis_operations[aggregate_key] += 1
+    else:
+        redis_operations[aggregate_key] = 1
 
 def read_email_to_uuid_from_redis():
     try:
@@ -43,7 +48,7 @@ def read_email_to_uuid_from_redis():
             last_viewed = email_to_uuid[email].get('last_viewed')
             if last_viewed != 'None':
                 email_to_uuid[email]['last_viewed'] = last_viewed
-        track_redis_call("email_get")
+        track_redis_call("GET", None,"email_get")
         return email_to_uuid
     except redis.RedisError as e:
         logger.error(f"Error reading email to UUID mapping from Redis: {e}")
@@ -56,7 +61,7 @@ def write_email_to_uuid_to_redis(email_to_uuid):
             # Convert all values to strings for storage in Redis
             data = {k: str(v) for k, v in data.items()}
             redis_client.hmset(redis_key, data)
-        track_redis_call("email_put")
+        track_redis_call("SET", None,"email_set")
         logger.info(f"Written to Redis: {email_to_uuid}")  # Debugging line
     except redis.RedisError as e:
         logger.error(f"Error writing email to UUID mapping to Redis: {e}")

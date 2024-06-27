@@ -9,9 +9,7 @@ function fetchTimers() {
 
             if (data.timers.length === 0) {
                 const noTimersMessage = document.createElement('tr');
-                noTimersMessage.innerHTML = `
-                    <td colspan="7" style="text-align: center;">There are currently no timers on the platform</td>
-                `;
+                noTimersMessage.innerHTML = `<td colspan="7" style="text-align: center;">There are currently no timers on the platform</td>`;
                 timersBody.appendChild(noTimersMessage);
             } else {
                 data.timers.forEach(timer => {
@@ -22,8 +20,8 @@ function fetchTimers() {
                         <td><a href="/timer.html?uuid=${timer.uuid}" target="_blank">${timer.uuid}</a></td>
                         <td>${timer.last_viewed || 'Never'}</td>
                         <td class="status" data-uuid="${timer.uuid}">${timer.is_active ? 'Active' : 'Inactive'}</td>
-                        <td id="getCount-${timer.uuid}">${timer.get_count}</td>
-                        <td id="setCount-${timer.uuid}">${timer.set_count}</td>
+                        <td id="getCount-${timer.uuid}">${timer.get_count || 0}</td>
+                        <td id="setCount-${timer.uuid}">${timer.set_count || 0}</td>
                         <td>
                             <i class="fas fa-play" onclick="startTimer('${timer.uuid}')" title="Start Timer"></i>
                             <i class="fas fa-redo" onclick="resetTimer('${timer.uuid}')" title="Reset Timer"></i>
@@ -32,14 +30,16 @@ function fetchTimers() {
                     `;
                     timersBody.appendChild(row);
                 });
-
-                // Add hover event listeners
-                document.querySelectorAll('.status').forEach(statusCell => {
-                    statusCell.addEventListener('mouseenter', showTooltip);
-                    statusCell.addEventListener('mouseleave', hideTooltip);
-                });
+                attachEventListeners();
             }
-        });
+        }).catch(error => console.error('Error fetching timers:', error));
+}
+
+function attachEventListeners() {
+    document.querySelectorAll('.status').forEach(statusCell => {
+        statusCell.addEventListener('mouseenter', showTooltip);
+        statusCell.addEventListener('mouseleave', hideTooltip);
+    });
 }
 
 function startTimer(uuid) {
@@ -47,7 +47,7 @@ function startTimer(uuid) {
         .then(response => response.json())
         .then(() => {
             fetchTimers();
-        });
+        }).catch(error => console.error('Error starting timer:', error));
 }
 
 function resetTimer(uuid) {
@@ -55,7 +55,7 @@ function resetTimer(uuid) {
         .then(response => response.json())
         .then(() => {
             fetchTimers();
-        });
+        }).catch(error => console.error('Error resetting timer:', error));
 }
 
 function deleteTimer(uuid) {
@@ -65,14 +65,14 @@ function deleteTimer(uuid) {
             .then(() => {
                 fetchTimers();
                 fetchRedisCallCounts(); // Fetch updated Redis call counts after deleting a timer
-            });
+            }).catch(error => console.error('Error deleting timer:', error));
     }
 }
 
 function showTooltip(event) {
     const status = event.target.innerText;
+    const uuid = event.target.getAttribute('data-uuid');
     if (status === 'Active') {
-        const uuid = event.target.getAttribute('data-uuid');
         fetch(`${baseUrl}/timer/${uuid}`)
             .then(response => response.json())
             .then(data => {
@@ -81,7 +81,7 @@ function showTooltip(event) {
                 tooltip.style.display = 'block';
                 tooltip.style.left = `${event.pageX + 10}px`;
                 tooltip.style.top = `${event.pageY - 30}px`;  // Position above the cursor
-            });
+            }).catch(error => console.error('Error showing tooltip:', error));
     }
 }
 
@@ -90,7 +90,21 @@ function hideTooltip() {
     tooltip.style.display = 'none';
 }
 
-document.addEventListener('DOMContentLoaded', (event) => {
+function fetchRedisCallCounts() {
+    fetch(`${baseUrl}/redis_operations`)
+        .then(response => response.json())
+        .then(data => {
+            const getCountElement = document.getElementById('getCount');
+            const setCountElement = document.getElementById('setCount');
+
+            getCountElement.textContent = data['GET:timer_update'] || 0;
+            setCountElement.textContent = data['SET:timer_update'] || 0;
+
+            // Optionally, update more detailed elements here
+        }).catch(error => console.error('Error fetching Redis call counts:', error));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
     fetchTimers();
     fetchRedisCallCounts();
     setInterval(fetchTimers, 5000); // Update timer data every 5 seconds
