@@ -36,9 +36,16 @@ def delete_timer(uuid):
         redis_client.delete(f"call_counts:{uuid}")
 
         # Remove from the email_to_uuid mapping
-        email_to_uuid = read_email_to_uuid_mapping()
-        email_to_uuid = {email: data for email, data in email_to_uuid.items() if data['uuid'] != uuid}
-        write_email_to_uuid_to_redis(email_to_uuid)
+        email_to_uuid = read_email_to_uuid_from_redis()
+        email_to_remove = None
+
+        for email, data in email_to_uuid.items():
+            if data['uuid'] == uuid:
+                email_to_remove = email
+                break
+
+        if email_to_remove:
+            redis_client.delete(f"email:{email_to_remove}")
 
         # Remove from the timers dictionary
         if uuid in timers:
@@ -195,7 +202,7 @@ def timers_status():
                 is_active = False
         else:
             is_active = False
-        
+
         timer_status.append({
             "uuid": uuid,
             "email": email,
