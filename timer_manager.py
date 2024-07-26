@@ -1,16 +1,17 @@
 import threading
 import redis
 import uuid as uuid_lib
+from typing import Optional
 
 class TimerManager:
-    def __init__(self, redis_host='localhost', redis_port=6379, redis_db=1, uuid=None, default_time=300):
+    def __init__(self, redis_host: str = 'localhost', redis_port: int = 6379, redis_db: int = 1, uuid: Optional[str] = None, default_time: int = 300):
         self.lock = threading.Lock()
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
         self.file_key = uuid if uuid else str(uuid_lib.uuid4())
         self.default_time = default_time
         self._ensure_key_exists()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"TimerManager(uuid={self.file_key}, default_time={self.default_time})"
 
     def _track_redis_call(self, call_type):
@@ -20,7 +21,7 @@ class TimerManager:
         if not self.redis_client.exists(self.file_key):
             self._write_time(0)
 
-    def _read_time(self):
+    def _read_time(self) -> float:
         try:
             time_value = self.redis_client.get(self.file_key)
             self._track_redis_call("GET")
@@ -36,17 +37,17 @@ class TimerManager:
         except redis.RedisError as e:
             print(f"Error writing key to Redis: {e}")
 
-    def get_remaining_time(self):
+    def get_remaining_time(self) -> int:
         with self.lock:
             return int(self._read_time())
 
-    def add_time(self, seconds=30):
+    def add_time(self, seconds: int = 30):
         with self.lock:
             time_value = self._read_time()
             if time_value > 0:
                 self._write_time(min(time_value + seconds, 10 * 60))
 
-    def reduce_time(self, seconds=30):
+    def reduce_time(self, seconds: int = 30):
         with self.lock:
             time_value = self._read_time()
             self._write_time(max(time_value - seconds, 0))
