@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, session, send_from_directory, request, Flask, render_template
+from flask import Blueprint, redirect, url_for, session, send_from_directory, request, Flask, render_template, make_response
 from auth import OAuthConfig, GoogleAuthService, AuthFlowManager
 import os
 import requests
@@ -77,6 +77,9 @@ def serve_timer_html():
 
 @routes_bp.route('/admin.html')
 def serve_admin_html():
+    auth = request.authorization
+    if not auth or not (auth.username == os.getenv("ADMIN_USERNAME") and auth.password == os.getenv("ADMIN_PASSWORD")):
+        return make_response('Could not verify your login!', 401, {'WWW-Authenticate': 'Basic realm="Login required!"'})
     return send_from_directory('static', 'admin.html')
 
 @routes_bp.route('/favicon.ico')
