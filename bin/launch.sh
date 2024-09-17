@@ -3,7 +3,7 @@
 # List of commands to run in separate panes with custom titles
 commands=(
     "echo 'Counter service is starting ...'; python count_down.py"
-    "echo 'ngrok is starting ...'; ngrok http 5001"
+    "echo 'ngrok is starting ...'; ngrok http --domain=www.streamtimers.com 5001"
     "echo 'Backend API starting ...'; python app.py"
 )
 
