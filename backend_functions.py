@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 bucket_name = os.getenv('BUCKET_NAME')
 base_url = os.getenv('BASE_URL')
-redis_client = redis.Redis(host='localhost', port=6379, db=1)
+redis_client = redis.Redis(host='localhost', port=6378, db=1)
 timers = {}
 
 # Track Redis GET and PUT calls
