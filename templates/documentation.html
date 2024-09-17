@@ -52,7 +52,7 @@
         <h3>GET /api/timer/&lt;uuid&gt;</h3>
         <p>Gets the remaining time for the timer with the specified UUID.</p>
         <h4>Curl Example</h4>
-        <pre><code>curl <a href="https://streamtimers.com/api/timer/{{ uuid }}" target="_blank">https://streamtimers.com/api/timer/{{ uuid }}</a></code></pre>
+        <pre><code>curl <a href="{{ base_url }}/api/timer/{{ uuid }}" target="_blank">{{ base_url }}/api/timer/{{ uuid }}</a></code></pre>
         <p>Response:</p>
         <pre><code>{
     "timer": remaining_time_in_seconds
@@ -68,7 +68,7 @@
         <p>Adds the specified number of seconds to the timer with the specified UUID. If <code>t=infinite</code>, sets the timer to infinite.</p>
         <p>Explanation: The <code>?t=30</code> parameter specifies the number of seconds to add to the timer. You can change the value of <code>30</code> to any other number to add a different amount of time.</p>
         <h4>Curl Example</h4>
-        <pre><code>curl <a href="https://streamtimers.com/api/add/{{ uuid }}?t=30" target="_blank">https://streamtimers.com/api/add/{{ uuid }}?t=30</a></code></pre>
+        <pre><code>curl <a href="{{ base_url }}/api/add/{{ uuid }}?t=30" target="_blank">{{ base_url }}/api/add/{{ uuid }}?t=30</a></code></pre>
         <p>Response:</p>
         <pre><code>{
     "message": "Added 30 seconds",
@@ -76,7 +76,7 @@
 }</code></pre>
         <h4>NightBOT Example</h4>
         <p>Command: <code>!addtime</code></p>
-        <pre><code>$(eval const r=`$(urlfetch json https://streamtimers.com/api/add/{{ uuid }}?t=30)`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
+        <pre><code>$(eval const r=`$(urlfetch json {{ base_url }}/api/add/{{ uuid }}?t=30)`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
     </div>
 
     <div class="endpoint">
@@ -85,7 +85,7 @@
         <p>Reduces 30 seconds from the timer with the specified UUID.</p>
         <p>Explanation: The <code>?t=30</code> parameter specifies the number of seconds to reduce from the timer. You can change the value of <code>30</code> to any other number to reduce a different amount of time.</p>
         <h4>Curl Example</h4>
-        <pre><code>curl <a href="https://streamtimers.com/api/reduce/{{ uuid }}?t=30" target="_blank">https://streamtimers.com/api/reduce/{{ uuid }}?t=30</a></code></pre>
+        <pre><code>curl <a href="{{ base_url }}/api/reduce/{{ uuid }}?t=30" target="_blank">{{ base_url }}/api/reduce/{{ uuid }}?t=30</a></code></pre>
         <p>Response:</p>
         <pre><code>{
     "message": "Reduced 30 seconds",
@@ -93,7 +93,7 @@
 }</code></pre>
         <h4>NightBOT Example</h4>
         <p>Command: <code>!reducetime</code></p>
-        <pre><code>$(eval const r=`$(urlfetch json https://streamtimers.com/api/reduce/{{ uuid }}?t=30)`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
+        <pre><code>$(eval const r=`$(urlfetch json {{ base_url }}/api/reduce/{{ uuid }}?t=30)`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
     </div>
 
     <div class="endpoint">
@@ -101,7 +101,7 @@
         <h3>GET /api/reset/&lt;uuid&gt;</h3>
         <p>Resets the timer with the specified UUID.</p>
         <h4>Curl Example</h4>
-        <pre><code>curl <a href="https://streamtimers.com/api/reset/{{ uuid }}" target="_blank">https://streamtimers.com/api/reset/{{ uuid }}</a></code></pre>
+        <pre><code>curl <a href="{{ base_url }}/api/reset/{{ uuid }}" target="_blank">{{ base_url }}/api/reset/{{ uuid }}</a></code></pre>
         <p>Response:</p>
         <pre><code>{
     "message": "Timer has been reset",
@@ -109,7 +109,7 @@
 }</code></pre>
         <h4>NightBOT Example</h4>
         <p>Command: <code>!resettimer</code></p>
-        <pre><code>$(eval const r=`$(urlfetch json https://streamtimers.com/api/reset/{{ uuid }})`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
+        <pre><code>$(eval const r=`$(urlfetch json {{ base_url }}/api/reset/{{ uuid }})`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
     </div>
 
     <div class="endpoint">
@@ -117,7 +117,7 @@
         <h3>GET /api/start/&lt;uuid&gt;</h3>
         <p>Starts the timer with the specified UUID.</p>
         <h4>Curl Example</h4>
-        <pre><code>curl <a href="https://streamtimers.com/api/start/{{ uuid }}" target="_blank">https://streamtimers.com/api/start/{{ uuid }}</a></code></pre>
+        <pre><code>curl <a href="{{ base_url }}/api/start/{{ uuid }}" target="_blank">{{ base_url }}/api/start/{{ uuid }}</a></code></pre>
         <p>Response:</p>
         <pre><code>{
     "message": "Timer started",
@@ -125,7 +125,7 @@
 }</code></pre>
         <h4>NightBOT Example</h4>
         <p>Command: <code>!starttimer</code></p>
-        <pre><code>$(eval const r=`$(urlfetch json https://streamtimers.com/api/start/{{ uuid }})`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
+        <pre><code>$(eval const r=`$(urlfetch json {{ base_url }}/api/start/{{ uuid }})`; try { const j=JSON.parse(r); j.message || 'Unexpected response'; } catch(e) { `Error parsing JSON. Raw response: ${r}`; })</code></pre>
     </div>
 </body>
 </html>
