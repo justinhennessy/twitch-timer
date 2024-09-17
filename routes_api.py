@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 api_bp = Blueprint('api', __name__)
 
 # Initialize Redis client
-redis_client = redis.Redis(host='localhost', port=6379, db=1)
+redis_client = redis.Redis(host='localhost', port=6378, db=1)
 
 base_url = os.getenv('BASE_URL')
 

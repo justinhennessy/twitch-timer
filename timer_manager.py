@@ -4,7 +4,7 @@ import uuid as uuid_lib
 from typing import Optional
 
 class TimerManager:
-    def __init__(self, redis_host: str = 'localhost', redis_port: int = 6379, redis_db: int = 1, uuid: Optional[str] = None, default_time: int = 300):
+    def __init__(self, redis_host: str = 'localhost', redis_port: int = 6378, redis_db: int = 1, uuid: Optional[str] = None, default_time: int = 300):
         self.lock = threading.Lock()
         self.redis_client = redis.Redis(host=redis_host, port=redis_port, db=redis_db)
         self.file_key = uuid if uuid else str(uuid_lib.uuid4())
