@@ -18,18 +18,17 @@ function displayTimerValue() {
         .then(data => {
             const timerDisplay = document.getElementById('timerDisplay');
             const body = document.body;
-            const infiniteImage = document.getElementById('infiniteImage');
 
             if (data.timer === -999) {
                 timerDisplay.innerText = ""; // Clear the text
-                infiniteImage.style.display = 'block';
+                document.getElementById('infiniteSymbol').style.display = 'block'; // Show infinite symbol
 
                 // Remove background animation class when timer is -999
                 body.classList.remove('pulsing-yellow', 'pulsing-red');
                 return;  // Exit the function early
             }
 
-            infiniteImage.style.display = 'none'; // Hide the image if not in infinite mode
+            document.getElementById('infiniteSymbol').style.display = 'none'; // Hide the infinite symbol if not in infinite mode
 
             if (data.timer === -1) {
                 timerDisplay.innerText = "Let's Go!";

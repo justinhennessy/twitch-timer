@@ -4,15 +4,16 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    min-height: 250px; /* Adjusted minimum height for the viewport */
     margin: 0;
     background-color: white;
 }
 
 #timerDisplay {
     font-family: 'Outfit', sans-serif;
-    font-size: 9em;
+    font-size: 7em; /* Increased size for better visibility */
     text-align: center;
+    margin: 0; /* Remove margin for better alignment */
 }
 
 .image-container {
@@ -60,11 +61,33 @@ body {
 /* Responsive styles */
 @media (max-width: 600px) {
     #timerDisplay {
-        font-size: 4em;
+        font-size: 5em; /* Adjust for smaller screens */
     }
 
-    .image-container {
-        width: 100%;
-        height: auto;
+    #infiniteSymbol {
+        font-size: 5em; /* Adjust for smaller screens */
     }
+}
+
+/* Infinite Symbol Styles */
+#infiniteSymbol {
+    font-size: 15em; /* Keep this size or adjust if needed */
+    color: black; /* Change color as desired */
+    text-align: center;
+    margin: 0; /* Remove margin to align with other text */
+    padding: 0; /* Ensure no extra padding */
+    display: inline-block; /* Keep it inline for horizontal alignment */
+    align-self: center; /* Center it vertically in the flex container */
+}
+
+/* Container for timer and infinite symbol */
+.container {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+    height: 200px; /* Adjusted height to accommodate larger infinite symbol */
+    width: 600px; /* Width remains the same */
+    overflow: hidden; /* Prevent overflow */
+    padding: 0; /* Removed padding */
 }
