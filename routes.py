@@ -89,5 +89,6 @@ def serve_favicon():
 @routes_bp.route('/documentation.html')
 def serve_documentation():
     uuid = request.args.get('uuid')
-    return render_template('documentation.html', uuid=uuid)
+    base_url = os.getenv('BASE_URL')
+    return render_template('documentation.html', uuid=uuid, base_url=base_url)
 
