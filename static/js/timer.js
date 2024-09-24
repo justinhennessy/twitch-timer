@@ -17,14 +17,14 @@ function displayTimerValue() {
         .then(response => response.json())
         .then(data => {
             const timerDisplay = document.getElementById('timerDisplay');
-            const body = document.body;
+            const container = document.querySelector('.container'); // Updated target
 
             if (data.timer === -999) {
                 timerDisplay.innerText = ""; // Clear the text
                 document.getElementById('infiniteSymbol').style.display = 'block'; // Show infinite symbol
 
-                // Remove background animation class when timer is -999
-                body.classList.remove('pulsing-yellow', 'pulsing-red');
+                // Remove pulsing classes from container when timer is -999
+                container.classList.remove('pulsing-yellow', 'pulsing-red');
                 return;  // Exit the function early
             }
 
@@ -32,28 +32,28 @@ function displayTimerValue() {
 
             if (data.timer === -1) {
                 timerDisplay.innerText = "Let's Go!";
-                body.classList.remove('pulsing-yellow', 'pulsing-red');
+                container.classList.remove('pulsing-yellow', 'pulsing-red');
                 return;
             }
 
             if (data.timer <= 30 && data.timer > 15) {
                 const formattedTime = formatTime(data.timer);
                 timerDisplay.innerText = formattedTime;
-                body.classList.remove('pulsing-red');
-                body.classList.add('pulsing-yellow');
+                container.classList.remove('pulsing-red');
+                container.classList.add('pulsing-yellow');
             } else if (data.timer <= 15 && data.timer > 0) {
                 const formattedTime = formatTime(data.timer);
                 timerDisplay.innerText = formattedTime;
-                body.classList.remove('pulsing-yellow');
-                body.classList.add('pulsing-red');
+                container.classList.remove('pulsing-yellow');
+                container.classList.add('pulsing-red');
             } else if (data.timer === 0) {
-                timerDisplay.innerText = 'Times up!';
-                body.classList.remove('pulsing-yellow', 'pulsing-red');
-                body.style.backgroundColor = 'white';
+                timerDisplay.innerText = 'Time\'s up!';
+                container.classList.remove('pulsing-yellow', 'pulsing-red');
+                container.style.backgroundColor = 'white';
             } else {
                 const formattedTime = formatTime(data.timer);
                 timerDisplay.innerText = formattedTime;
-                body.classList.remove('pulsing-yellow', 'pulsing-red');
+                container.classList.remove('pulsing-yellow', 'pulsing-red');
             }
         })
         .catch(error => {

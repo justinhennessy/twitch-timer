@@ -6,14 +6,19 @@ body {
     justify-content: center;
     min-height: 250px; /* Adjusted minimum height for the viewport */
     margin: 0;
-    background-color: white;
+    background-color: transparent; /* Ensure background is always transparent */
 }
 
 #timerDisplay {
     font-family: 'Outfit', sans-serif;
-    font-size: 7em; /* Increased size for better visibility */
+    font-size: 4.5em; /* Further reduced font size to prevent text from touching the edges */
     text-align: center;
     margin: 0; /* Remove margin for better alignment */
+    white-space: nowrap; /* Prevent text from wrapping to multiple lines */
+    line-height: 1.1; /* Tightens the vertical spacing of the text */
+    /* Optional: Handle overflow if needed */
+    /* overflow: hidden;
+    text-overflow: ellipsis; */
 }
 
 .image-container {
@@ -42,30 +47,36 @@ body {
 
 @keyframes backgroundPulseYellow {
     0%, 100% {
-        background-color: white; /* Start and end with white background */
+        background-color: rgba(255, 255, 0, 0.5); /* Semi-transparent yellow */
     }
     50% {
-        background-color: lightyellow; /* Pulse to light yellow at 50% */
+        background-color: rgba(255, 255, 0, 0.8); /* Brighter yellow */
     }
 }
 
 @keyframes backgroundPulseRed {
     0%, 100% {
-        background-color: white; /* Start and end with white background */
+        background-color: rgba(255, 0, 0, 0.5); /* Semi-transparent red */
     }
     50% {
-        background-color: lightcoral; /* Pulse to light red at 50% */
+        background-color: rgba(255, 0, 0, 0.8); /* Brighter red */
     }
 }
 
 /* Responsive styles */
 @media (max-width: 600px) {
     #timerDisplay {
-        font-size: 5em; /* Adjust for smaller screens */
+        font-size: 4em; /* Adjusted for smaller screens */
     }
 
     #infiniteSymbol {
         font-size: 5em; /* Adjust for smaller screens */
+    }
+
+    .container {
+        height: 220px; /* Adjusted height for smaller screens */
+        width: 90%; /* Make container width responsive */
+        padding: 10px 15px; /* Further reduced padding for smaller screens */
     }
 }
 
@@ -86,8 +97,8 @@ body {
     flex-direction: column; /* Stack elements vertically */
     align-items: center; /* Center horizontally */
     justify-content: center; /* Center vertically */
-    height: 200px; /* Adjusted height to accommodate larger infinite symbol */
-    width: 600px; /* Width remains the same */
+    height: 200px; /* Reduced height to minimize gaps */
+    width: 700px; /* Increased width to accommodate longer text */
     overflow: hidden; /* Prevent overflow */
-    padding: 0; /* Removed padding */
+    padding: 5px 10px; /* Further reduced vertical and horizontal padding */
 }
