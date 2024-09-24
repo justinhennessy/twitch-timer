@@ -37,30 +37,31 @@ body {
     object-fit: contain; /* Fit the image within the container */
 }
 
-.pulsing-yellow {
-    animation: backgroundPulseYellow 1s ease-in-out infinite;
-}
-
-.pulsing-red {
-    animation: backgroundPulseRed 1s ease-in-out infinite;
-}
-
+/* Updated Keyframes for More Noticeable Pastel Yellow */
 @keyframes backgroundPulseYellow {
     0%, 100% {
-        background-color: rgba(255, 255, 0, 0.5); /* Semi-transparent yellow */
+        background-color: #f5f5e5; /* Light Yellow */
     }
     50% {
-        background-color: rgba(255, 255, 0, 0.8); /* Brighter yellow */
+        background-color: #fbf6c7; /* Bright Yellow */
     }
 }
 
 @keyframes backgroundPulseRed {
     0%, 100% {
-        background-color: rgba(255, 0, 0, 0.5); /* Semi-transparent red */
+        background-color: #FFD1DC; /* Light Pastel Pink */
     }
     50% {
-        background-color: rgba(255, 0, 0, 0.8); /* Brighter red */
+        background-color: #FFE4E1; /* Misty Rose */
     }
+}
+
+.pulsing-yellow {
+    animation: backgroundPulseYellow 3s ease-in-out infinite; /* Slower pulse for increased subtlety */
+}
+
+.pulsing-red {
+    animation: backgroundPulseRed 3s ease-in-out infinite; /* Slower pulse for increased subtlety */
 }
 
 /* Responsive styles */
