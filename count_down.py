@@ -5,7 +5,7 @@ import logging
 from backend_functions import read_email_to_uuid_from_redis
 
 # Initialize Redis client
-redis_client = redis.Redis(host='localhost', port=6378, db=1)
+redis_client = redis.Redis(host=os.getenv('REDIS_HOST', 'localhost'), port=int(os.getenv('REDIS_PORT', 6379)), db=1)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('count_down')
