@@ -7,7 +7,7 @@ services:
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf
-      - ./data:/data
+      - ./redis-data:/data
 
   app:
     build: .
