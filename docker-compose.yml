@@ -3,7 +3,7 @@ services:
     image: redis/redis-stack-server:latest
     container_name: redis-json-timer
     ports:
-      - "6378:6379"
+      - "6379:6379"
     volumes:
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - ./data:/data
@@ -18,7 +18,7 @@ services:
       - redis
     environment:
       - REDIS_HOST=redis
-      - REDIS_PORT=6378
+      - REDIS_PORT=6379
       - BASE_URL=http://localhost:5001
     volumes:
       - .:/app

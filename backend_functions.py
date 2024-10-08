@@ -19,7 +19,7 @@ def get_redis_client(max_retries=5, retry_delay=2):
         try:
             client = redis.Redis(
                 host=os.getenv('REDIS_HOST', 'localhost'),
-                port=int(os.getenv('REDIS_PORT', 6378)),
+                port=int(os.getenv('REDIS_PORT', 6379)),
                 db=1
             )
             client.ping()  # Test the connection
