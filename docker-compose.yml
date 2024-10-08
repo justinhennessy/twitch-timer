@@ -15,6 +15,7 @@ services:
     container_name: timer-app
     ports:
       - "5001:5001"
+      - "4040:4040"
     depends_on:
       - redis
     environment:
