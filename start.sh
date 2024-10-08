@@ -37,7 +37,6 @@ ngrok config add-authtoken $NGROK_AUTHTOKEN
 
 # Start ngrok in the background and log to a file
 echo "Starting ngrok..."
-export NGROK_WEB_ADDR=0.0.0.0:4040
 nohup ngrok http --domain=www.streamtimers.com --log=ngrok.log --log-format=json --log-level=debug 5001 > /dev/null 2>&1 &
 
 # Keep the container running

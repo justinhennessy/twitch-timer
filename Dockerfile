@@ -25,6 +25,9 @@ COPY . .
 # Make the start script executable
 RUN chmod +x start.sh
 
+# Set environment variables
+ENV NGROK_WEB_ADDR=0.0.0.0:4040
+
 # Expose the ports the app runs on
 EXPOSE 5001 4040
 
