@@ -4,6 +4,9 @@ FROM python:3.11-slim
 # Set working directory in the container
 WORKDIR /app
 
+# Install procps package which includes the ps command
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+
 # Copy the requirements file into the container
 COPY requirements.txt .
 
