@@ -4,13 +4,13 @@ FROM python:3.11-slim
 # Set working directory in the container
 WORKDIR /app
 
-# Install procps package which includes the ps command, and wget to download ngrok
-RUN apt-get update && apt-get install -y procps wget && rm -rf /var/lib/apt/lists/*
-
-# Install ngrok
-RUN wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.tgz && \
-    tar xvzf ngrok-stable-linux-amd64.tgz -C /usr/local/bin && \
-    rm ngrok-stable-linux-amd64.tgz
+# Install necessary packages
+RUN apt-get update && apt-get install -y procps wget gnupg2 curl && \
+    curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | gpg --dearmor -o /usr/share/keyrings/ngrok-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/ngrok-archive-keyring.gpg] https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && \
+    apt-get update && \
+    apt-get install -y ngrok && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .
