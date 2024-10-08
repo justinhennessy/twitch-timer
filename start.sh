@@ -30,8 +30,9 @@ else
     echo "Error: app.py failed to start. Check app.log for details."
 fi
 
-# Configure ngrok with the authtoken
+# Configure ngrok with the authtoken from .env file
 echo "Configuring ngrok..."
+source .env
 ngrok config add-authtoken $NGROK_AUTHTOKEN
 
 # Start ngrok in the foreground

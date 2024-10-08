@@ -12,9 +12,6 @@ RUN apt-get update && apt-get install -y procps wget gnupg2 curl && \
     apt-get install -y ngrok && \
     rm -rf /var/lib/apt/lists/*
 
-# Add build argument for ngrok authtoken
-ARG NGROK_AUTHTOKEN
-ENV NGROK_AUTHTOKEN=$NGROK_AUTHTOKEN
 
 # Copy the requirements file into the container
 COPY requirements.txt .
