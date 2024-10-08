@@ -59,9 +59,9 @@ def read_email_to_uuid_from_redis():
         keys = redis_client.keys('email:*')
         logger.info(f"Keys: {keys}")
         for key in keys:
-            email = key.decode().split(':', 1)[1]
+            email = key.split(':', 1)[1]
             data = redis_client.hgetall(key)
-            email_to_uuid[email] = {k.decode(): v.decode() for k, v in data.items()}
+            email_to_uuid[email] = {k: v for k, v in data.items()}
 
             # Convert 'default_time' to int and handle 'last_viewed' conversion
             email_to_uuid[email]['default_time'] = int(email_to_uuid[email]['default_time'])
