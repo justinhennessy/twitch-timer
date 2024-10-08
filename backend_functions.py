@@ -18,13 +18,13 @@ def get_redis_client(max_retries=5, retry_delay=2):
     for attempt in range(max_retries):
         try:
             client = redis.Redis(
-                host=os.getenv('REDIS_HOST', 'localhost'),
+                host=os.getenv('REDIS_HOST', 'redis'),
                 port=int(os.getenv('REDIS_PORT', 6378)),
                 decode_responses=True,
                 db=1
             )
             client.ping()  # Test the connection
-            logger.info("Successfully connected to Redis")
+            logger.info(f"Successfully connected to Redis at {os.getenv('REDIS_HOST', 'redis')}:{os.getenv('REDIS_PORT', 6378)}")
             return client
         except redis.ConnectionError as e:
             if attempt < max_retries - 1:
