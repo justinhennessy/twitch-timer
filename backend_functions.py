@@ -5,6 +5,7 @@ import redis
 from datetime import datetime
 from dotenv import load_dotenv
 from timer_manager import TimerManager
+import time
 
 # Load environment variables from .env file
 load_dotenv()
@@ -12,12 +13,27 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Initialize Redis client
-redis_client = redis.Redis(
-    host=os.getenv('REDIS_HOST', 'localhost'),
-    port=int(os.getenv('REDIS_PORT', 6378)),
-    db=1
-)
+# Initialize Redis client with retry mechanism
+def get_redis_client(max_retries=5, retry_delay=2):
+    for attempt in range(max_retries):
+        try:
+            client = redis.Redis(
+                host=os.getenv('REDIS_HOST', 'localhost'),
+                port=int(os.getenv('REDIS_PORT', 6378)),
+                db=1
+            )
+            client.ping()  # Test the connection
+            logger.info("Successfully connected to Redis")
+            return client
+        except redis.ConnectionError as e:
+            if attempt < max_retries - 1:
+                logger.warning(f"Failed to connect to Redis (attempt {attempt + 1}/{max_retries}). Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                logger.error(f"Failed to connect to Redis after {max_retries} attempts: {e}")
+                raise
+
+redis_client = get_redis_client()
 
 bucket_name = os.getenv('BUCKET_NAME')
 base_url = os.getenv('BASE_URL')

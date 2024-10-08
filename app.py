@@ -2,9 +2,10 @@ from flask import Flask
 from flask_cors import CORS
 from routes import routes_bp
 from routes_api import api_bp
-from backend_functions import load_existing_timers
+from backend_functions import load_existing_timers, get_redis_client
 
 import os
+import time
 
 def create_app():
     app = Flask(__name__)
@@ -14,6 +15,9 @@ def create_app():
     # Register Blueprints
     app.register_blueprint(routes_bp)
     app.register_blueprint(api_bp)
+
+    # Ensure Redis connection is established
+    redis_client = get_redis_client()
 
     # Load existing timers
     load_existing_timers()
