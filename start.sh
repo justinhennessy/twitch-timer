@@ -30,5 +30,6 @@ else
     echo "Error: app.py failed to start. Check app.log for details."
 fi
 
-# Keep the container running
-tail -f /dev/null
+# Start ngrok in the foreground
+echo "Starting ngrok..."
+ngrok http --domain=www.streamtimers.com 5001

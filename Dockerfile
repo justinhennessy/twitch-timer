@@ -4,8 +4,13 @@ FROM python:3.11-slim
 # Set working directory in the container
 WORKDIR /app
 
-# Install procps package which includes the ps command
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
+# Install procps package which includes the ps command, and wget to download ngrok
+RUN apt-get update && apt-get install -y procps wget && rm -rf /var/lib/apt/lists/*
+
+# Install ngrok
+RUN wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.tgz && \
+    tar xvzf ngrok-stable-linux-amd64.tgz -C /usr/local/bin && \
+    rm ngrok-stable-linux-amd64.tgz
 
 # Copy the requirements file into the container
 COPY requirements.txt .
