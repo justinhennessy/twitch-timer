@@ -25,8 +25,8 @@ COPY . .
 # Make the start script executable
 RUN chmod +x start.sh
 
-# Expose the port the app runs on
-EXPOSE 5001
+# Expose the ports the app runs on
+EXPOSE 5001 4040
 
 # Command to run the start script
 CMD ["./start.sh"]
