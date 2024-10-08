@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y procps wget gnupg2 curl && \
     apt-get install -y ngrok && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /root/.config/ngrok && \
-    echo "version: 2" > /root/.config/ngrok/ngrok.yml
+    echo -e "version: 2\nweb_addr: 0.0.0.0:4040" > /root/.config/ngrok/ngrok.yml
 
 
 # Copy the requirements file into the container
