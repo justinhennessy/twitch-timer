@@ -15,6 +15,20 @@ else
     echo "Error: count_down.py failed to start. Check count_down.log for details."
 fi
 
-# Start the main Flask application
+# Start the main Flask application in the background
 echo "Starting app.py..."
-python app.py
+nohup python app.py > app.log 2>&1 &
+
+# Give it a moment to start
+sleep 2
+
+# Check if app.py is running
+if pgrep -f "python app.py" > /dev/null
+then
+    echo "app.py is running."
+else
+    echo "Error: app.py failed to start. Check app.log for details."
+fi
+
+# Keep the container running
+tail -f /dev/null
