@@ -30,6 +30,10 @@ else
     echo "Error: app.py failed to start. Check app.log for details."
 fi
 
+# Configure ngrok with the authtoken
+echo "Configuring ngrok..."
+ngrok config add-authtoken $NGROK_AUTHTOKEN
+
 # Start ngrok in the foreground
 echo "Starting ngrok..."
 ngrok http --domain=www.streamtimers.com 5001

@@ -10,7 +10,10 @@ services:
       - ./redis-data:/data
 
   app:
-    build: .
+    build:
+      context: .
+      args:
+        - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     container_name: timer-app
     ports:
       - "5001:5001"
@@ -20,5 +23,6 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6378
       - BASE_URL=http://localhost:5001
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
     volumes:
       - .:/app
