@@ -4,13 +4,15 @@ FROM python:3.11-slim
 # Set working directory in the container
 WORKDIR /app
 
-# Install necessary packages
+# Install necessary packages and create ngrok config
 RUN apt-get update && apt-get install -y procps wget gnupg2 curl && \
     curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | gpg --dearmor -o /usr/share/keyrings/ngrok-archive-keyring.gpg && \
     echo "deb [signed-by=/usr/share/keyrings/ngrok-archive-keyring.gpg] https://ngrok-agent.s3.amazonaws.com buster main" | tee /etc/apt/sources.list.d/ngrok.list && \
     apt-get update && \
     apt-get install -y ngrok && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /root/.config/ngrok && \
+    echo "version: 2" > /root/.config/ngrok/ngrok.yml
 
 
 # Copy the requirements file into the container
