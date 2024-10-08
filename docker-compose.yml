@@ -4,7 +4,7 @@ services:
     container_name: redis-json-timer
     ports:
       - "6378:6378"
-    command: ["redis-server", "--port", "6378", "/usr/local/etc/redis/redis.conf"]
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - ./config/redis.conf:/usr/local/etc/redis/redis.conf
       - ./data:/data
