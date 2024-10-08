@@ -12,9 +12,15 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize Redis client
+redis_client = redis.Redis(
+    host=os.getenv('REDIS_HOST', 'localhost'),
+    port=int(os.getenv('REDIS_PORT', 6378)),
+    db=1
+)
+
 bucket_name = os.getenv('BUCKET_NAME')
 base_url = os.getenv('BASE_URL')
-redis_client = redis.Redis(host='localhost', port=6378, db=1)
 timers = {}
 
 # Track Redis GET and PUT calls
