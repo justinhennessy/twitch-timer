@@ -12,12 +12,12 @@ def create_app():
     CORS(app)
     app.secret_key = os.urandom(24)
 
+    # Ensure Redis connection is established
+    redis_client = get_redis_client()
+
     # Register Blueprints
     app.register_blueprint(routes_bp)
     app.register_blueprint(api_bp)
-
-    # Ensure Redis connection is established
-    redis_client = get_redis_client()
 
     # Load existing timers
     load_existing_timers()
